@@ -2,7 +2,7 @@ module.exports = {
   name: "Demisto",
   acronym: "D",
   description: "TODO",
-  entityTypes: ["IPv4", "IPv6"],
+  entityTypes: ["IPv4", "IPv6", "hash", "domain", "email"],
   styles: ["./styles/styles.less"],
   block: {
     component: {
@@ -45,7 +45,7 @@ module.exports = {
     {
       key: "apiKey",
       name: "API Key",
-      description: "Valid Securonix Username",
+      description: "The API Key found Demisto Dashboard Settings",
       default: "",
       type: "password",
       userCanEdit: true,

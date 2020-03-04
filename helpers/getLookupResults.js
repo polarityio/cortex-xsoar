@@ -1,21 +1,64 @@
-
-const _ = require("lodash");
-const Aigle = require("aigle");
+const _ = require('lodash');
+const Aigle = require('aigle');
 const _P = Aigle.mixin(_);
 
-const IGNORED_IPS = new Set(["127.0.0.1", "255.255.255.255", "0.0.0.0"]);
-const createLookupResults = require("./createLookupResults/index");
-const getViolationResponse = require("./getViolationResponse");
+const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 
 const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
-  _partitionFlatMap(async (entitiesPartition) => {
-    const entityGroups = _groupEntities(entitiesPartition);
+  _partitionFlatMap(
+    async (_entitiesPartition) => {
+      const entitiesPartition = _entitiesPartition.filter(
+        ({ isIP, value }) => !isIP || (isIP && !IGNORED_IPS.has(value))
+      );
 
-    //requests awaited here
+      const results = await axiosWithDefaults
+        .get(`${options.url}/incidents/search`, {
+          method: 'POST',
+          headers: {
+            authorization: options.apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: {
+            filters: {
+              name: entitiesPartition.map(({ value }) => value)
+            }
+          }
+        })
+        .then(_checkForInternalDemistoError)
+        .catch((error) => {
+          Logger.error({ error }, 'Incident Query Error');
+          throw error;
+        });
 
-    return [{ entity: entities, data: 1}]
-  }, 10, entities);
+      const lookupResults = entitiesPartition.map((entity) =>
+        _.chian(results)
+          .filter(({ data: name }) => name === entity.value)
+          .thru((result) =>
+            !result || !entity.isIP || (entity.isIP && !IGNORED_IPS.has(entity.value))
+              ? { entity, data: null }
+              : {
+                  entity,
+                  data: { details: JSON.stringify(result) }
+                }
+          )
+      );
 
+      return lookupResults;
+    },
+    20,
+    entities
+  );
+
+const _checkForInternalDemistoError = (response) => {
+  const { error, detail } = response;
+  if (error) {
+    const internalDemistoError = Error('Internal Demisto Query Error');
+    internalDemistoError.status = 'internalDemistoError';
+    internalDemistoError.description = `${error} -> ${detail}`;
+    throw internalDemistoError;
+  }
+  return response;
+};
 const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) =>
   _P
     .chain(collection)
@@ -25,15 +68,6 @@ const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) 
     .flatten()
     .value();
 
-const _groupEntities = (entities) =>
-  _.chain(entities)
-    .filter(({ isIP, value }) => !isIP || (isIP && !IGNORED_IPS.has(value)))
-    .groupBy(({ isIP, isDomain, isEmail }) =>
-      isIP ? "ip" : isDomain ? "domain" : isEmail ? "email" : "unknown"
-    )
-    .value();
-
 module.exports = {
-  getLookupResults,
-  _groupEntities
+  getLookupResults
 };
