@@ -1,0 +1,20 @@
+{
+  "main": "./integration.js",
+  "name": "demisto",
+  "version": "3.0.0-beta",
+  "private": true,
+  "license": "MIT",
+  "author": "Polarity",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "aigle": "^1.14.1",
+    "axios": "^0.19.0",
+    "lodash": "^4.17.15",
+    "node-cache": "^4.2.0"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0"
+  }
+}
