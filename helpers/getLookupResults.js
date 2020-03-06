@@ -7,43 +7,55 @@ const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
 const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
   _partitionFlatMap(
     async (_entitiesPartition) => {
-      const entitiesPartition = _entitiesPartition.filter(
-        ({ isIP, value }) => !isIP || (isIP && !IGNORED_IPS.has(value))
+      const { ignoredIPs, entitiesPartition } = _.groupBy(
+        _entitiesPartition,
+        ({ isIP, value }) =>
+          !isIP || (isIP && !IGNORED_IPS.has(value)) ? 'entitiesPartition' : 'ignoredIPs'
       );
-
-      const results = await axiosWithDefaults
-        .get(`${options.url}/incidents/search`, {
-          method: 'POST',
-          headers: {
-            authorization: options.apiKey,
-            'Content-Type': 'application/json'
-          },
-          body: {
-            filters: {
-              name: entitiesPartition.map(({ value }) => value)
-            }
+      
+      const results = await axiosWithDefaults({
+        url: `${options.url}/incidents/search`,
+        method: 'post',
+        headers: {
+          authorization: options.apiKey,
+          'Content-type': 'application/json'
+        },
+        data: {
+          filter: {
+            name: entitiesPartition.map(({ value }) => value)
           }
-        })
+        }
+      })
         .then(_checkForInternalDemistoError)
         .catch((error) => {
           Logger.error({ error }, 'Incident Query Error');
           throw error;
         });
-
-      const lookupResults = entitiesPartition.map((entity) =>
-        _.chian(results)
-          .filter(({ data: name }) => name === entity.value)
-          .thru((result) =>
-            !result || !entity.isIP || (entity.isIP && !IGNORED_IPS.has(entity.value))
-              ? { entity, data: null }
-              : {
+        Logger.trace(
+          {
+            results,
+            ignoredIPs,
+            entitiesPartition
+          },
+          'FJSKJDLF'
+        );
+      const lookupResults = _.map(entitiesPartition, (entity) =>
+        _.chain(results.data.data)
+          .filter(({ name }) => name === entity.value)
+          .thru((results) =>
+            results && results.length || Logger.trace({ results }, "LKJSAKLFSJF")
+              ? {
                   entity,
-                  data: { details: JSON.stringify(result) }
+                  data: { summary: [], details: JSON.stringify(results) }
                 }
+              : { entity, data: null }
           )
+          .value()
       );
 
-      return lookupResults;
+      return lookupResults.concat(
+        _.map(ignoredIPs, (entity) => ({ entity, data: null }))
+      );
     },
     20,
     entities
@@ -59,6 +71,7 @@ const _checkForInternalDemistoError = (response) => {
   }
   return response;
 };
+
 const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) =>
   _P
     .chain(collection)
