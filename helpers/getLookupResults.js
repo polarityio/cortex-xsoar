@@ -1,8 +1,7 @@
-const _ = require('lodash');
-const Aigle = require('aigle');
-const _P = Aigle.mixin(_);
+const _ = require("lodash");
 
-const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
+const { IGNORED_IPS, RELEVANT_INDICATOR_SEARCH_RESULT_KEYS } = require("./constants");
+const { _partitionFlatMap, getKeys } = require("./dataTransformations");
 
 const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
   _partitionFlatMap(
@@ -10,15 +9,15 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
       const { ignoredIPs, entitiesPartition } = _.groupBy(
         _entitiesPartition,
         ({ isIP, value }) =>
-          !isIP || (isIP && !IGNORED_IPS.has(value)) ? 'entitiesPartition' : 'ignoredIPs'
+          !isIP || (isIP && !IGNORED_IPS.has(value)) ? "entitiesPartition" : "ignoredIPs"
       );
-      
+
       const results = await axiosWithDefaults({
         url: `${options.url}/incidents/search`,
-        method: 'post',
+        method: "post",
         headers: {
           authorization: options.apiKey,
-          'Content-type': 'application/json'
+          "Content-type": "application/json"
         },
         data: {
           filter: {
@@ -28,25 +27,31 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
       })
         .then(_checkForInternalDemistoError)
         .catch((error) => {
-          Logger.error({ error }, 'Incident Query Error');
+          Logger.error({ error }, "Incident Query Error");
           throw error;
         });
-        Logger.trace(
-          {
-            results,
-            ignoredIPs,
-            entitiesPartition
-          },
-          'FJSKJDLF'
-        );
+      Logger.trace(
+        {
+          results,
+          ignoredIPs,
+          entitiesPartition
+        },
+        "FJSKJDLF"
+      );
       const lookupResults = _.map(entitiesPartition, (entity) =>
         _.chain(results.data.data)
           .filter(({ name }) => name === entity.value)
           .thru((results) =>
-            results && results.length || Logger.trace({ results }, "LKJSAKLFSJF")
+            results && results.length
               ? {
                   entity,
-                  data: { summary: [], details: JSON.stringify(results) }
+                  data: {
+                    summary: createSummary(results),
+                    details: {
+                      results: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, results),
+                      baseUrl: `${options.url}/#/Custom/caseinfoid/`
+                    }
+                  }
                 }
               : { entity, data: null }
           )
@@ -64,22 +69,26 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
 const _checkForInternalDemistoError = (response) => {
   const { error, detail } = response;
   if (error) {
-    const internalDemistoError = Error('Internal Demisto Query Error');
-    internalDemistoError.status = 'internalDemistoError';
+    const internalDemistoError = Error("Internal Demisto Query Error");
+    internalDemistoError.status = "internalDemistoError";
     internalDemistoError.description = `${error} -> ${detail}`;
     throw internalDemistoError;
   }
   return response;
 };
 
-const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) =>
-  _P
-    .chain(collection)
-    .chunk(partitionSize)
-    .map((x) => async () => func(x))
-    .thru((x) => Aigle.parallelLimit(x, parallelLimit))
-    .flatten()
-    .value();
+const createSummary = (results) => {
+  const result = results[0];
+  const labels = result.labels.map(({ value }) => value);
+  const summary = [
+    ...labels,
+    result.type,
+    `Severity: ${result.severity}`,
+    result.category
+  ];
+  
+  return summary.filter(_.identity);
+};
 
 module.exports = {
   getLookupResults
