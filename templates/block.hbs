@@ -1,10 +1,10 @@
-{{#each details.incidents as |incident index|}}
-  {{#if (gt index 0)}}
+{{#each incidents as |incident incidentIndex|}}
+  {{#if (gt incidentIndex 0)}}
     <hr>
   {{/if}}
 
   <div class="p-title">
-    {{fa-icon "info" fixedWidth=true}} Indicator Info
+    {{fa-icon "info" fixedWidth=true}} Incident Info
   </div>
   {{#if incident.name}}
     <div>
@@ -81,29 +81,29 @@
     {{humanize playbook.name}}
   {{/power-select}}
   --}}
-  <select class="w-100" size=5 onchange={{action (mut container.__selectedPlaybookId) value="target.value"}}>
-    {{#each details.playbooks as | playbook |}}
+  <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
+    {{#each playbooks as |playbook|}}
       <option value="{{playbook.id}}">{{playbook.name}}</option>
     {{/each}}
   </select>
   <div class="d-flex flex-row justify-content-between align-items-center">
     <div>
-      {{#if container.__running}}
+      {{#if incident.__running}}
         {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
       {{/if}}
     </div>
-    <button {{action "runPlaybook" containerIndex container.id container.__selectedPlaybookId}}
+    <button {{action "runPlaybook" incidentIndex incident.id incident.__selectedPlaybookId}}
             class="p-btn btn btn-light mt-1">Run Playbook
     </button>
   </div>
-  {{#if container.__message}}
+  {{#if incident.__message}}
     <div class="alert alert-info mt-1">
-      {{container.__message}}
+      {{incident.__message}}
     </div>
   {{/if}}
-  {{#if container.__errorMessage}}
+  {{#if incident.__errorMessage}}
     <div class="alert alert-danger mt-1">
-      {{container.__errorMessage}}
+      {{incident.__errorMessage}}
     </div>
   {{/if}}
 {{/each}}

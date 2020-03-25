@@ -1,6 +1,6 @@
 module.exports = {
   name: "Demisto",
-  acronym: "D",
+  acronym: "DE",
   description: "TODO",
   entityTypes: ["IPv4", "IPv6", "hash", "domain", "email"],
   styles: ["./styles/styles.less"],

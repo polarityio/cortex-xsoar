@@ -101,7 +101,7 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
               .value()
           )
       );
-      // const lookupResults = [{entity: entities[0], data: {details: { incidents: {name: "test"}}}}]
+      
       return lookupResults.concat(
         _.map(ignoredIPs, (entity) => ({ entity, data: null }))
       );
