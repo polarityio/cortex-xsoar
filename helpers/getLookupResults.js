@@ -74,11 +74,43 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
           throw error;
         });
 
+      const incidentsWithPlaybookRunHistory = await _P.map(incidents, async (incident) => {
+        const {
+          data: { pbHistory }
+        } = await axiosWithDefaults({
+          url: `${options.url}/inv-playbook/${incident.id}`,
+          method: 'get',
+          headers: {
+            authorization: options.apiKey,
+            'Content-type': 'application/json'
+          },
+          data: {
+            filter: {
+              name: entitiesPartition.map(({ value }) => value)
+            }
+          }
+        })
+        .then(_checkForInternalDemistoError)
+        .catch((error) => {
+          Logger.error({ error }, 'Incident Query Error');
+          throw error;
+        });
+        
+        return {
+          ...incident,
+          pbHistory
+        }
+      });
+      Logger.trace(
+        { incidents,incidentsWithPlaybookRunHistory },
+        'incidentsWithPlaybookRunHistory'
+      );
+
       const lookupResults = _.flatMap(
         entityGroupsWithPlaybooks,
         ({ entities, playbooks }) =>
           _.map(entities, (entity) =>
-            _.chain(incidents)
+            _.chain(incidentsWithPlaybookRunHistory)
               .filter(({ name }) => name === entity.value)
               .thru((incidents) =>
                 incidents && incidents.length
@@ -101,7 +133,7 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
               .value()
           )
       );
-      
+
       return lookupResults.concat(
         _.map(ignoredIPs, (entity) => ({ entity, data: null }))
       );
