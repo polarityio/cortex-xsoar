@@ -1,3 +1,5 @@
+const { formatPlaybookRunHistory } = require('./getLookupResults');
+
 const runPlaybook = async (
   Logger,
   axiosWithDefaults,
@@ -23,8 +25,7 @@ const _runPlaybookOnExistingIncident = async (
   Logger,
   axiosWithDefaults
 ) => {
-  Logger.trace({ incidentId, playbookId, options }, "alsjdlfjsldfjl")
-  const { data: playbookRunResult, error } = await axiosWithDefaults({
+  const { data: playbookRunHistory, error } = await axiosWithDefaults({
     url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
     method: 'post',
     headers: {
@@ -33,19 +34,19 @@ const _runPlaybookOnExistingIncident = async (
     },
     data: {}
   })
-  .then(_checkForInternalDemistoError)
-  .catch((error) => {
-    Logger.error({ error }, 'Incident Query Error');
-    return { error };
-  });
-  
-  Logger.trace({ playbookRunResult });
+    .then(_checkForInternalDemistoError)
+    .catch((error) => {
+      Logger.error({ error }, 'Incident Query Error');
+      return { error };
+    });
+
+  const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
+
   return {
     err: error,
-    playbooksRan: [{}],
-    playbooksRanCount: 5,
+    pbHistory: formattedPlaybookHistory,
     newIndicator: false,
-    status: error ? "Failed" : "Success"
+    status: error ? 'Failed' : 'Success'
   };
 };
 

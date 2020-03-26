@@ -78,14 +78,7 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
       const incidentsWithPlaybookRunHistory = await _P.map(
         incidents,
         async (incident) => {
-          const {
-            data: {
-              pbHistory,
-              name: currentPlaybookName,
-              startDate: currentPlaybookStartDate,
-              state: currentPlaybookStatus
-            }
-          } = await axiosWithDefaults({
+          const { data: playbookRunHistory } = await axiosWithDefaults({
             url: `${options.url}/inv-playbook/${incident.id}`,
             method: 'get',
             headers: {
@@ -104,20 +97,9 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
               throw error;
             });
 
-          const pbHistoryWithFormattedDates = _.chain(pbHistory)
-            .thru((playbookRuns) =>
-              playbookRuns.concat({
-                name: currentPlaybookName,
-                date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
-                status: currentPlaybookStatus
-              })
-            )
-            .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
-            .map(({ startDate, ...playbookRun }) => ({
-              ...playbookRun,
-              date: moment(startDate).format('MMM D YY, h:mm A')
-            }))
-            .value();
+          const pbHistoryWithFormattedDates = formatPlaybookRunHistory(
+            playbookRunHistory
+          );
 
           return {
             ...incident,
@@ -189,6 +171,28 @@ const createSummary = (results) => {
   return summary.filter(_.identity);
 };
 
+const formatPlaybookRunHistory = ({
+  pbHistory,
+  name: currentPlaybookName,
+  startDate: currentPlaybookStartDate,
+  state: currentPlaybookStatus
+}) =>
+  _.chain(pbHistory)
+    .thru((playbookRuns) =>
+      playbookRuns.concat({
+        name: currentPlaybookName,
+        date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
+        status: currentPlaybookStatus
+      })
+    )
+    .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
+    .map(({ startDate, ...playbookRun }) => ({
+      ...playbookRun,
+      date: moment(startDate).format('MMM D YY, h:mm A')
+    }))
+    .value();
+
 module.exports = {
-  getLookupResults
+  getLookupResults,
+  formatPlaybookRunHistory
 };

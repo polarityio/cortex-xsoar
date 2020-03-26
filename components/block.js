@@ -9,9 +9,6 @@ polarity.export = PolarityComponent.extend({
   newEventMessage: '',
   newEventPlaybookId: null,
   isRunning: false,
-  timezone: Ember.computed('Intl', function() {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  }),
   actions: {
     changeTab: function(incidentIndex, tabName) {
       this.set(`incidents.${incidentIndex}.__activeTab`, tabName);
@@ -19,8 +16,7 @@ polarity.export = PolarityComponent.extend({
     runPlaybook: function(incidentIndex, incidentId, playbookId) {
       let self = this;
 
-      if (!playbookId)
-        return self.setMessage(incidentIndex, 'Select a playbook to run.');
+      if (!playbookId) return self.setMessage(incidentIndex, 'Select a playbook to run.');
 
       this.setMessage(incidentIndex, '');
       this.setRunning(incidentIndex, true);
@@ -30,19 +26,20 @@ polarity.export = PolarityComponent.extend({
         .sendIntegrationMessage({
           data: { entityValue: this.block.entity.value, incidentId, playbookId }
         })
-        .then(({ err, playbooksRan, playbooksRanCount, newIndicator, status }) => {
+        .then(({ err, pbHistory, newIndicator }) => {
           if (newIndicator) {
             self.setIndicator(newIndicator);
             incidentIndex = 0;
           } else {
-            self.setPlaybookRunHistory(incidentIndex, playbooksRan, playbooksRanCount);
+            self.setPlaybookRunHistory(incidentIndex, pbHistory);
           }
 
-          if (err) {
-            self.setMessage(incidentIndex, `Run Failed: ${err.message || err.title}`);
-          } else {
-            self.setMessage(incidentIndex, `Successfully Ran Playbook: ${status}`);
-          }
+          self.setMessage(
+            incidentIndex,
+            err
+              ? `Run Failed: ${err.message || err.title}`
+              : 'Successfully Ran Playbook'
+          );
         })
         .catch((err) => {
           self.setErrorMessage(incidentIndex, err.message || err.title);
@@ -62,9 +59,8 @@ polarity.export = PolarityComponent.extend({
     }
   },
 
-  setPlaybookRunHistory(incidentIndex, playbooksRan, playbooksRanCount) {
-    this.set(`incidents.${incidentIndex}.playbooksRan`, playbooksRan);
-    this.set(`incidents.${incidentIndex}.playbooksRanCount`, playbooksRanCount);
+  setPlaybookRunHistory(incidentIndex, pbHistory) {
+    this.set(`incidents.${incidentIndex}.pbHistory`, pbHistory);
   },
 
   setIndicator(newIndicator) {
