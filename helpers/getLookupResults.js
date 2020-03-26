@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const moment = require('moment');
 const Aigle = require('aigle');
 const _P = Aigle.mixin(_);
 
@@ -74,36 +75,55 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
           throw error;
         });
 
-      const incidentsWithPlaybookRunHistory = await _P.map(incidents, async (incident) => {
-        const {
-          data: { pbHistory }
-        } = await axiosWithDefaults({
-          url: `${options.url}/inv-playbook/${incident.id}`,
-          method: 'get',
-          headers: {
-            authorization: options.apiKey,
-            'Content-type': 'application/json'
-          },
-          data: {
-            filter: {
-              name: entitiesPartition.map(({ value }) => value)
+      const incidentsWithPlaybookRunHistory = await _P.map(
+        incidents,
+        async (incident) => {
+          const {
+            data: {
+              pbHistory,
+              name: currentPlaybookName,
+              startDate: currentPlaybookStartDate,
+              state: currentPlaybookStatus
             }
-          }
-        })
-        .then(_checkForInternalDemistoError)
-        .catch((error) => {
-          Logger.error({ error }, 'Incident Query Error');
-          throw error;
-        });
-        
-        return {
-          ...incident,
-          pbHistory
+          } = await axiosWithDefaults({
+            url: `${options.url}/inv-playbook/${incident.id}`,
+            method: 'get',
+            headers: {
+              authorization: options.apiKey,
+              'Content-type': 'application/json'
+            },
+            data: {
+              filter: {
+                name: entitiesPartition.map(({ value }) => value)
+              }
+            }
+          })
+            .then(_checkForInternalDemistoError)
+            .catch((error) => {
+              Logger.error({ error }, 'Incident Query Error');
+              throw error;
+            });
+
+          const pbHistoryWithFormattedDates = _.chain(pbHistory)
+            .thru((playbookRuns) =>
+              playbookRuns.concat({
+                name: currentPlaybookName,
+                date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
+                status: currentPlaybookStatus
+              })
+            )
+            .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
+            .map(({ startDate, ...playbookRun }) => ({
+              ...playbookRun,
+              date: moment(startDate).format('MMM D YY, h:mm A')
+            }))
+            .value();
+
+          return {
+            ...incident,
+            pbHistory: pbHistoryWithFormattedDates
+          };
         }
-      });
-      Logger.trace(
-        { incidents,incidentsWithPlaybookRunHistory },
-        'incidentsWithPlaybookRunHistory'
       );
 
       const lookupResults = _.flatMap(
@@ -123,8 +143,11 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
                           incidents: getKeys(
                             RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
                             incidents
-                          ),
-                          baseUrl: `${options.url}/#/Custom/caseinfoid/`
+                          ).map(({ created, ...incident }) => ({
+                            ...incident,
+                            created: moment(created).format('MMM D YY, h:mm A')
+                          })),
+                          baseUrl: `${options.url}/#`
                         }
                       }
                     }

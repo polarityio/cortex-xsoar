@@ -2,6 +2,7 @@ polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   incidents: Ember.computed.alias('details.incidents'),
   playbooks: Ember.computed.alias('details.playbooks'),
+  baseUrl: Ember.computed.alias('details.baseUrl'),
   onDemand: Ember.computed('block.entity.requestContext.requestType', function() {
     return this.block.entity.requestContext.requestType === 'OnDemand';
   }),
