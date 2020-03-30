@@ -114,27 +114,42 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
           _.map(entities, (entity) =>
             _.chain(incidentsWithPlaybookRunHistory)
               .filter(({ name }) => name === entity.value)
-              .thru((incidents) =>
-                incidents && incidents.length
-                  ? {
-                      entity,
-                      data: {
-                        summary: createSummary(incidents),
-                        details: {
-                          playbooks,
-                          incidents: getKeys(
-                            RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-                            incidents
-                          ).map(({ created, ...incident }) => ({
-                            ...incident,
-                            created: moment(created).format('MMM D YY, h:mm A')
-                          })),
-                          baseUrl: `${options.url}/#`
-                        }
+              .thru((incidents) => {
+                if (incidents && incidents.length) {
+                  return {
+                    entity,
+                    data: {
+                      summary: createSummary(incidents),
+                      details: {
+                        playbooks,
+                        incidents: getKeys(
+                          RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
+                          incidents
+                        ).map(({ created, ...incident }) => ({
+                          ...incident,
+                          created: moment(created).format('MMM D YY, h:mm A')
+                        })),
+                        baseUrl: `${options.url}/#`
                       }
                     }
-                  : { entity, data: null }
-              )
+                  };
+                } else if (entity.requestContext.requestType === 'OnDemand') {
+                  return {
+                    entity,
+                    isVolatile: true,
+                    data: {
+                      summary: ['No Incident Found'],
+                      details: {
+                        playbooks,
+                        onDemand: true,
+                        baseUrl: `${options.url}/#`
+                      }
+                    }
+                  };
+                } else {
+                  return { entity, data: null };
+                }
+              })
               .value()
           )
       );
@@ -159,7 +174,10 @@ const _checkForInternalDemistoError = (response) => {
 };
 
 const createSummary = (results) => {
-  const result = results[0];
+  const result = {
+    ...results[0],
+    severity: results[0].severity || "Unknown"
+  };
   const labels = result.labels.map(({ value }) => value);
   const summary = [
     result.type,
@@ -179,7 +197,7 @@ const formatPlaybookRunHistory = ({
 }) =>
   _.chain(pbHistory)
     .thru((playbookRuns) =>
-      playbookRuns.concat({
+      (playbookRuns || []).concat({
         name: currentPlaybookName,
         date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
         status: currentPlaybookStatus
@@ -194,5 +212,6 @@ const formatPlaybookRunHistory = ({
 
 module.exports = {
   getLookupResults,
-  formatPlaybookRunHistory
+  formatPlaybookRunHistory,
+  createSummary
 };

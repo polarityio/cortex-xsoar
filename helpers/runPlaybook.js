@@ -1,4 +1,6 @@
-const { formatPlaybookRunHistory } = require('./getLookupResults');
+const moment = require('moment');
+
+const { formatPlaybookRunHistory, createSummary } = require('./getLookupResults');
 
 const runPlaybook = async (
   Logger,
@@ -7,14 +9,22 @@ const runPlaybook = async (
   options,
   callback
 ) => {
-  Logger.trace('testings');
-  const playbookRunResult = await _runPlaybookOnExistingIncident(
-    incidentId,
-    playbookId,
-    options,
-    Logger,
-    axiosWithDefaults
-  );
+  const playbookRunResult = incidentId
+    ? await _runPlaybookOnExistingIncident(
+        incidentId,
+        playbookId,
+        options,
+        Logger,
+        axiosWithDefaults
+      )
+    : await _createContainerAndRunPlaybook(
+        entityValue,
+        playbookId,
+        options,
+        Logger,
+        axiosWithDefaults
+      );
+
   callback(null, playbookRunResult);
 };
 
@@ -36,7 +46,7 @@ const _runPlaybookOnExistingIncident = async (
   })
     .then(_checkForInternalDemistoError)
     .catch((error) => {
-      Logger.error({ error }, 'Incident Query Error');
+      Logger.error({ error }, 'Playbook Run Error');
       return { error };
     });
 
@@ -44,9 +54,7 @@ const _runPlaybookOnExistingIncident = async (
 
   return {
     err: error,
-    pbHistory: formattedPlaybookHistory,
-    newIndicator: false,
-    status: error ? 'Failed' : 'Success'
+    pbHistory: formattedPlaybookHistory
   };
 };
 
@@ -61,71 +69,76 @@ const _checkForInternalDemistoError = (response) => {
   return response;
 };
 
-const _createContainerAndRunPlaybook = (
+const _createContainerAndRunPlaybook = async (
   entityValue,
+  playbookId,
   options,
-  actionId,
-  phantomPlaybooks,
-  callback
+  Logger,
+  axiosWithDefaults
 ) => {
-  let containers = new Containers(Logger, options);
-  containers.createContainer(entityValue, (err, container) => {
-    if (err) return callback({ err: 'Failed to Create Container', detail: err });
-    phantomPlaybooks.runPlaybookAgainstIncident(actionId, container.id, (err, resp) => {
-      Logger.trace({ resp, err }, 'Result of playbook run');
-      if (!resp && !err)
-        Logger.error({ err: new Error('No response found!') }, 'Error running playbook');
-
-      phantomPlaybooks.getPlaybookRunHistory([container.id], (error, playbooksRan) => {
-        Logger.trace({ playbooksRan, error }, 'Result of playbook run history');
-        if (err || error) {
-          Logger.trace({ playbooksRan, error }, 'Failed to get Playbook Run History');
-          return callback(null, {
-            err: err || error,
-            ...playbooksRan[0],
-            newContainer: {
-              ...container,
-              playbooksRan: playbooksRan && playbooksRan[0].playbooksRan,
-              playbooksRanCount: playbooksRan && playbooksRan[0].playbooksRan.length
-            }
-          });
-        }
-        callback(null, {
-          ...resp,
-          ...playbooksRan[0],
-          newContainer: {
-            ...container,
-            playbooksRan: playbooksRan[0].playbooksRan,
-            playbooksRanCount: playbooksRan[0].playbooksRan.length
+  let newIncident;
+  try {
+    const { data } = await axiosWithDefaults({
+      url: `${options.url}/incident`,
+      method: 'post',
+      headers: {
+        authorization: options.apiKey,
+        'Content-type': 'application/json'
+      },
+      data: {
+        name: entityValue,
+        playbookId,
+        labels: [
+          {
+            type: 'origin',
+            value: 'Polarity'
           }
-        });
-      });
-    });
-  });
+        ],
+        details: 'This is an Incident uploaded from Polarity'
+      }
+    }).then(_checkForInternalDemistoError);
+
+    newIncident = {
+      ...data,
+      created: moment(data.created).format('MMM D YY, h:mm A')
+    };
+
+    await axiosWithDefaults({
+      url: `${options.url}/incident/investigate`,
+      method: 'post',
+      headers: {
+        authorization: options.apiKey,
+        'Content-type': 'application/json'
+      },
+      data: {
+        id: newIncident.id,
+        version: 1
+      }
+    }).then(_checkForInternalDemistoError);
+
+    const { data: playbookRunHistory } = await axiosWithDefaults({
+      url: `${options.url}/inv-playbook/${newIncident.id}`,
+      method: 'get',
+      headers: {
+        authorization: options.apiKey,
+        'Content-type': 'application/json'
+      }
+    }).then(_checkForInternalDemistoError);
+
+    const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
+
+    return {
+      pbHistory: formattedPlaybookHistory,
+      newIncident,
+      newSummary: createSummary([newIncident])
+    };
+  } catch (err) {
+    Logger.error({ error: err }, 'Incident Creation or Playbook Run Error');
+    return {
+      err,
+      newIncident
+    };
+  }
 };
 
 module.exports = runPlaybook;
-
-// if (incidentId) {
-// const playbookRunResult = await _runPlaybookOnExistingIncident(
-//   incidentId,
-//   playbookId,
-//   options,
-//   axiosWithDefaults
-// );
-// } else if (entityValue) {
-//   _createContainerAndRunPlaybook(
-//     entityValue,
-//     options,
-//     actionId,
-//     phantomPlaybooks,
-//     callback
-//   );
-// } else {
-//   const err = {
-//     err: 'Unexpected Error',
-//     detail: 'Error: Unexpected value passed when trying to run a playbook'
-//   };
-//   Logger.error({ err, incidentId, actionId, entity }, 'Error running playbook');
-//   callback(err);
-// }
