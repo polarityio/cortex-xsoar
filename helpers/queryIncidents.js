@@ -21,6 +21,7 @@ const queryIncidents = async (options, entitiesPartition, Logger, axiosWithDefau
       Logger.error({ error }, 'Incident Query Error');
       throw error;
     });
+    
   return incidents;
 };
 
