@@ -1,6 +1,10 @@
-const moment = require('moment');
+const { createSummary } = require('./formatDomistoResults');
 
-const { formatPlaybookRunHistory, createSummary } = require('./getLookupResults');
+const { checkForInternalDemistoError } = require('./handleError');
+const { formatIncidentDate } = require('./formatDomistoResults');
+const {
+  formatPlaybookRunHistory
+} = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (
   Logger,
@@ -35,20 +39,13 @@ const _runPlaybookOnExistingIncident = async (
   Logger,
   axiosWithDefaults
 ) => {
-  const { data: playbookRunHistory, error } = await axiosWithDefaults({
-    url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
-    method: 'post',
-    headers: {
-      authorization: options.apiKey,
-      'Content-type': 'application/json'
-    },
-    data: {}
-  })
-    .then(_checkForInternalDemistoError)
-    .catch((error) => {
-      Logger.error({ error }, 'Playbook Run Error');
-      return { error };
-    });
+  const { data: playbookRunHistory, error } = await _runPlaybook(
+    options,
+    playbookId,
+    incidentId,
+    Logger,
+    axiosWithDefaults
+  );
 
   const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
 
@@ -58,16 +55,22 @@ const _runPlaybookOnExistingIncident = async (
   };
 };
 
-const _checkForInternalDemistoError = (response) => {
-  const { error, detail } = response;
-  if (error) {
-    const internalDemistoError = Error('Internal Demisto Query Error');
-    internalDemistoError.status = 'internalDemistoError';
-    internalDemistoError.description = `${error} -> ${detail}`;
-    throw internalDemistoError;
-  }
-  return response;
-};
+const _runPlaybook = (options, playbookId, incidentId, Logger, axiosWithDefaults) =>
+  axiosWithDefaults({
+    url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
+    method: 'post',
+    headers: {
+      authorization: options.apiKey,
+      'Content-type': 'application/json'
+    },
+    data: {}
+  })
+    .then(checkForInternalDemistoError)
+    .catch((error) => {
+      Logger.error({ error }, 'Playbook Run Error');
+      return { error };
+    });
+
 
 const _createContainerAndRunPlaybook = async (
   entityValue,
@@ -78,52 +81,22 @@ const _createContainerAndRunPlaybook = async (
 ) => {
   let newIncident;
   try {
-    const { data } = await axiosWithDefaults({
-      url: `${options.url}/incident`,
-      method: 'post',
-      headers: {
-        authorization: options.apiKey,
-        'Content-type': 'application/json'
-      },
-      data: {
-        name: entityValue,
-        playbookId,
-        labels: [
-          {
-            type: 'origin',
-            value: 'Polarity'
-          }
-        ],
-        details: 'This is an Incident uploaded from Polarity'
-      }
-    }).then(_checkForInternalDemistoError);
+    const { data: newlyCreatedIncident } = await _createIncidentAndRunPlaybook(
+      entityValue,
+      playbookId,
+      options,
+      axiosWithDefaults
+    );
 
-    newIncident = {
-      ...data,
-      created: moment(data.created).format('MMM D YY, h:mm A')
-    };
+    newIncident = formatIncidentDate(newlyCreatedIncident);
 
-    await axiosWithDefaults({
-      url: `${options.url}/incident/investigate`,
-      method: 'post',
-      headers: {
-        authorization: options.apiKey,
-        'Content-type': 'application/json'
-      },
-      data: {
-        id: newIncident.id,
-        version: 1
-      }
-    }).then(_checkForInternalDemistoError);
+    await _startInvestigation(newIncident, options, axiosWithDefaults);
 
-    const { data: playbookRunHistory } = await axiosWithDefaults({
-      url: `${options.url}/inv-playbook/${newIncident.id}`,
-      method: 'get',
-      headers: {
-        authorization: options.apiKey,
-        'Content-type': 'application/json'
-      }
-    }).then(_checkForInternalDemistoError);
+    const { data: playbookRunHistory } = await _getPlaybookRunHistory(
+      newIncident,
+      options,
+      axiosWithDefaults
+    );
 
     const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
 
@@ -140,5 +113,55 @@ const _createContainerAndRunPlaybook = async (
     };
   }
 };
+
+const _createIncidentAndRunPlaybook = (
+  entityValue,
+  playbookId,
+  options,
+  axiosWithDefaults
+) =>
+  axiosWithDefaults({
+    url: `${options.url}/incident`,
+    method: 'post',
+    headers: {
+      authorization: options.apiKey,
+      'Content-type': 'application/json'
+    },
+    data: {
+      name: entityValue,
+      playbookId,
+      labels: [
+        {
+          type: 'origin',
+          value: 'Polarity'
+        }
+      ],
+      details: 'This is an Incident uploaded from Polarity'
+    }
+  }).then(checkForInternalDemistoError);
+
+const _startInvestigation = (newIncident, options, axiosWithDefaults) =>
+  axiosWithDefaults({
+    url: `${options.url}/incident/investigate`,
+    method: 'post',
+    headers: {
+      authorization: options.apiKey,
+      'Content-type': 'application/json'
+    },
+    data: {
+      id: newIncident.id,
+      version: 1
+    }
+  }).then(checkForInternalDemistoError);
+
+const _getPlaybookRunHistory = (newIncident, options, axiosWithDefaults) =>
+  axiosWithDefaults({
+    url: `${options.url}/inv-playbook/${newIncident.id}`,
+    method: 'get',
+    headers: {
+      authorization: options.apiKey,
+      'Content-type': 'application/json'
+    }
+  }).then(checkForInternalDemistoError);
 
 module.exports = runPlaybook;

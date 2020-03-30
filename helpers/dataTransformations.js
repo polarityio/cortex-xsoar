@@ -18,5 +18,6 @@ const getKeys = (keys, items) =>
 
 module.exports = {
   _partitionFlatMap,
-  getKeys
+  getKeys,
+  _P
 };

@@ -15,9 +15,7 @@ const STATUS_CODE_ERROR_MESSAGE = {
   }),
   405: (error) => ({
     err: 'Incident Query Error',
-    detail:
-      'Possible malformed request -> ' +
-      `${error.description}`
+    detail: 'Possible malformed request -> ' + `${error.description}`
   }),
   500: (error) => ({
     err: 'Server Error',
@@ -44,7 +42,18 @@ const handleError = (error) =>
   (
     STATUS_CODE_ERROR_MESSAGE[error.status] ||
     STATUS_CODE_ERROR_MESSAGE[Math.round(error.status / 10) * 10] ||
-    STATUS_CODE_ERROR_MESSAGE["unknown"]
+    STATUS_CODE_ERROR_MESSAGE['unknown']
   )(error);
 
-module.exports = handleError;
+const checkForInternalDemistoError = (response) => {
+  const { error, detail } = response;
+  if (error) {
+    const internalDemistoError = Error('Internal Demisto Query Error');
+    internalDemistoError.status = 'internalDemistoError';
+    internalDemistoError.description = `${error} -> ${detail}`;
+    throw internalDemistoError;
+  }
+  return response;
+};
+
+module.exports = { handleError, checkForInternalDemistoError };

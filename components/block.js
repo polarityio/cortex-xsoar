@@ -33,7 +33,6 @@ polarity.export = PolarityComponent.extend({
       })
         .then(({ err, pbHistory, newIncident, newSummary }) => {
           if (err) {
-            outerThis.setRunning(incidentIndex, false);
             outerThis.setErrorMessage(
               incidentIndex,
               `Failed: ${err.message || err.title || err.description || 'Unknown Reason'}`
@@ -49,6 +48,8 @@ polarity.export = PolarityComponent.extend({
 
             outerThis.setMessage(incidentIndex, 'Successfully Ran Playbook');
           }
+
+          outerThis.setRunning(incidentIndex, false);
           outerThis.get('block').notifyPropertyChange('data');
         })
         .catch((err) => {

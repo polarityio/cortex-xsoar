@@ -6,7 +6,7 @@ const validateOptions = require('./helpers/validateOptions');
 const createAxiosWithDefaults = require('./helpers/createAxiosWithDefaults');
 
 const { TIME_FOR_TOKEN_DAYS } = require('./helpers/constants');
-const handleError = require('./helpers/handleError');
+const { handleError } = require('./helpers/handleError');
 const { getLookupResults } = require('./helpers/getLookupResults');
 const runPlaybook = require('./helpers/runPlaybook');
 
@@ -20,7 +20,7 @@ const tokenCache = new NodeCache({
 const startup = (logger) => {
   Logger = logger;
   axiosWithDefaults = createAxiosWithDefaults(tokenCache, Logger);
-}
+};
 
 const doLookup = async (entities, { url, ..._options }, cb) => {
   Logger.debug({ entities }, 'Entities');
