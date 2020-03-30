@@ -130,9 +130,10 @@ const _createIncidentAndRunPlaybook = (
     data: {
       name: entityValue,
       playbookId,
+      severity: 3,
       labels: [
         {
-          type: 'origin',
+          type: 'Origin',
           value: 'Polarity'
         }
       ],
