@@ -2,9 +2,7 @@ const { createSummary } = require('./formatDomistoResults');
 
 const { checkForInternalDemistoError } = require('./handleError');
 const { formatIncidentDate } = require('./formatDomistoResults');
-const {
-  formatPlaybookRunHistory
-} = require('./getPlaybookRunHistoryForIncidents');
+const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (
   Logger,
@@ -13,23 +11,28 @@ const runPlaybook = async (
   options,
   callback
 ) => {
-  const playbookRunResult = incidentId
-    ? await _runPlaybookOnExistingIncident(
-        incidentId,
-        playbookId,
-        options,
-        Logger,
-        axiosWithDefaults
-      )
-    : await _createContainerAndRunPlaybook(
-        entityValue,
-        playbookId,
-        options,
-        Logger,
-        axiosWithDefaults
-      );
+  try {
+    const playbookRunResult = incidentId
+      ? await _runPlaybookOnExistingIncident(
+          incidentId,
+          playbookId,
+          options,
+          Logger,
+          axiosWithDefaults
+        )
+      : await _createContainerAndRunPlaybook(
+          entityValue,
+          playbookId,
+          options,
+          Logger,
+          axiosWithDefaults
+        );
 
-  callback(null, playbookRunResult);
+    callback(null, playbookRunResult);
+  } catch (error) {
+    Logger.error({ error }, 'Playbook Run Failed');
+    callback({ err: 'Failed to Run Playbook', detail: error });
+  }
 };
 
 const _runPlaybookOnExistingIncident = async (
@@ -71,7 +74,6 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, axiosWithDefaults
       return { error };
     });
 
-
 const _createContainerAndRunPlaybook = async (
   entityValue,
   playbookId,
@@ -105,12 +107,9 @@ const _createContainerAndRunPlaybook = async (
       newIncident,
       newSummary: createSummary([newIncident])
     };
-  } catch (err) {
-    Logger.error({ error: err }, 'Incident Creation or Playbook Run Error');
-    return {
-      err,
-      newIncident
-    };
+  } catch (error) {
+    Logger.error({ error }, 'Incident Creation or Playbook Run Error');
+    throw error
   }
 };
 

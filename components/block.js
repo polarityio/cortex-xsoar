@@ -31,30 +31,24 @@ polarity.export = PolarityComponent.extend({
           playbookId
         }
       })
-        .then(({ err, pbHistory, newIncident, newSummary }) => {
-          if (err) {
-            outerThis.setErrorMessage(
-              incidentIndex,
-              `Failed: ${err.message || err.title || err.description || 'Unknown Reason'}`
-            );
-          } else {
-            if (newIncident) {
-              outerThis.setIncident(newIncident);
-              incidentIndex = 0;
-            }
-
-            if (newSummary) outerThis.setSummary(newSummary);
-            if (pbHistory) outerThis.setPlaybookRunHistory(incidentIndex, pbHistory);
-
-            outerThis.setMessage(incidentIndex, 'Successfully Ran Playbook');
+        .then(({ pbHistory, newIncident, newSummary }) => {
+          if (newIncident) {
+            outerThis.setIncident(newIncident);
+            incidentIndex = 0;
           }
 
-          outerThis.setRunning(incidentIndex, false);
-          outerThis.get('block').notifyPropertyChange('data');
+          if (newSummary) outerThis.setSummary(newSummary);
+          if (pbHistory) outerThis.setPlaybookRunHistory(incidentIndex, pbHistory);
+
+          outerThis.setMessage(incidentIndex, 'Successfully Ran Playbook');
         })
         .catch((err) => {
+          outerThis.setErrorMessage(
+            incidentIndex,
+            `Failed: ${err.message || err.title || err.description || 'Unknown Reason'}`
+          );
+        }).finally(() => {
           outerThis.setRunning(incidentIndex, false);
-          outerThis.setErrorMessage(incidentIndex, err.message || err.title);
           outerThis.get('block').notifyPropertyChange('data');
         });
     }
