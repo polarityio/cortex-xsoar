@@ -1,16 +1,16 @@
 const { checkForInternalDemistoError } = require('./handleError');
 
-const queryIncidents = async (options, entitiesPartition, Logger, axiosWithDefaults) => {
+const queryIncidents = async (options, entitiesPartition, Logger, requestWithDefaults) => {
   const {
-    data: { data: incidents }
-  } = await axiosWithDefaults({
+    body: { data: incidents }
+  } = await requestWithDefaults({
     url: `${options.url}/incidents/search`,
-    method: 'post',
+    method: 'POST',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
     },
-    data: {
+    body: {
       filter: {
         name: entitiesPartition.map(({ value }) => value)
       }

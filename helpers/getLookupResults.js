@@ -10,7 +10,7 @@ const {
 } = require('./getPlaybookRunHistoryForIncidents');
 const { formatDomistoResults } = require('./formatDomistoResults');
 
-const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
+const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
   _partitionFlatMap(
     async (_entitiesPartition) => {
       const { entitiesPartition, ignoredIpLookupResults } = _splitOutIgnoredIps(
@@ -21,22 +21,21 @@ const getLookupResults = (entities, options, axiosWithDefaults, Logger) =>
         entitiesPartition,
         options,
         Logger,
-        axiosWithDefaults
+        requestWithDefaults
       );
 
       const incidents = await queryIncidents(
         options,
         entitiesPartition,
         Logger,
-        axiosWithDefaults
+        requestWithDefaults
       );
 
       const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
-        entitiesPartition,
         incidents,
         options,
         Logger,
-        axiosWithDefaults
+        requestWithDefaults
       );
       
       const lookupResults = formatDomistoResults(

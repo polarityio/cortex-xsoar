@@ -7,32 +7,32 @@ const getPlaybooksByEntityGroup = (
   entitiesPartition,
   options,
   Logger,
-  axiosWithDefaults
+  requestWithDefaults
 ) =>
   _P
     .chain(entitiesPartition)
     .groupBy(_getEntityType)
-    .reduce(_getPlaybooksForEntityType(options, Logger, axiosWithDefaults), {})
+    .reduce(_getPlaybooksForEntityType(options, Logger, requestWithDefaults), {})
     .value();
 
 const _getEntityType = ({ isIP, isHash, isDomain, isEmail }) =>
   isIP ? 'ip' : isHash ? 'hash' : isDomain ? 'domain' : isEmail && 'email';
 
-const _getPlaybooksForEntityType = (options, Logger, axiosWithDefaults) => async (
+const _getPlaybooksForEntityType = (options, Logger, requestWithDefaults) => async (
   agg,
   valueEntities,
   keyEntityType
 ) => {
   const {
-    data: { playbooks }
-  } = await axiosWithDefaults({
+    body: { playbooks }
+  } = await requestWithDefaults({
     url: `${options.url}/playbook/search`,
-    method: 'post',
+    method: 'POST',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
     },
-    data: {
+    body: {
       query: PLAYBOOK_SEARCH_TERMS[keyEntityType]
     }
   })

@@ -6,7 +6,7 @@ const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncident
 
 const runPlaybook = async (
   Logger,
-  axiosWithDefaults,
+  requestWithDefaults,
   { data: { incidentId, playbookId, entityValue } },
   options,
   callback
@@ -18,14 +18,14 @@ const runPlaybook = async (
           playbookId,
           options,
           Logger,
-          axiosWithDefaults
+          requestWithDefaults
         )
       : await _createContainerAndRunPlaybook(
           entityValue,
           playbookId,
           options,
           Logger,
-          axiosWithDefaults
+          requestWithDefaults
         );
 
     callback(null, playbookRunResult);
@@ -40,14 +40,14 @@ const _runPlaybookOnExistingIncident = async (
   playbookId,
   options,
   Logger,
-  axiosWithDefaults
+  requestWithDefaults
 ) => {
-  const { data: playbookRunHistory, error } = await _runPlaybook(
+  const { body: playbookRunHistory, error } = await _runPlaybook(
     options,
     playbookId,
     incidentId,
     Logger,
-    axiosWithDefaults
+    requestWithDefaults
   );
 
   const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
@@ -58,10 +58,10 @@ const _runPlaybookOnExistingIncident = async (
   };
 };
 
-const _runPlaybook = (options, playbookId, incidentId, Logger, axiosWithDefaults) =>
-  axiosWithDefaults({
+const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaults) =>
+  requestWithDefaults({
     url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
-    method: 'post',
+    method: 'POST',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
@@ -79,25 +79,25 @@ const _createContainerAndRunPlaybook = async (
   playbookId,
   options,
   Logger,
-  axiosWithDefaults
+  requestWithDefaults
 ) => {
   let newIncident;
   try {
-    const { data: newlyCreatedIncident } = await _createIncidentAndRunPlaybook(
+    const { body: newlyCreatedIncident } = await _createIncidentAndRunPlaybook(
       entityValue,
       playbookId,
       options,
-      axiosWithDefaults
+      requestWithDefaults
     );
 
     newIncident = formatIncidentDate(newlyCreatedIncident);
 
-    await _startInvestigation(newIncident, options, axiosWithDefaults);
+    await _startInvestigation(newIncident, options, requestWithDefaults);
 
-    const { data: playbookRunHistory } = await _getPlaybookRunHistory(
+    const { body: playbookRunHistory } = await _getPlaybookRunHistory(
       newIncident,
       options,
-      axiosWithDefaults
+      requestWithDefaults
     );
 
     const formattedPlaybookHistory = formatPlaybookRunHistory(playbookRunHistory);
@@ -117,16 +117,16 @@ const _createIncidentAndRunPlaybook = (
   entityValue,
   playbookId,
   options,
-  axiosWithDefaults
+  requestWithDefaults
 ) =>
-  axiosWithDefaults({
+  requestWithDefaults({
     url: `${options.url}/incident`,
-    method: 'post',
+    method: 'POST',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
     },
-    data: {
+    body: {
       name: entityValue,
       playbookId,
       severity: 3,
@@ -140,24 +140,24 @@ const _createIncidentAndRunPlaybook = (
     }
   }).then(checkForInternalDemistoError);
 
-const _startInvestigation = (newIncident, options, axiosWithDefaults) =>
-  axiosWithDefaults({
+const _startInvestigation = (newIncident, options, requestWithDefaults) =>
+  requestWithDefaults({
     url: `${options.url}/incident/investigate`,
-    method: 'post',
+    method: 'POST',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
     },
-    data: {
+    body: {
       id: newIncident.id,
       version: 1
     }
   }).then(checkForInternalDemistoError);
 
-const _getPlaybookRunHistory = (newIncident, options, axiosWithDefaults) =>
-  axiosWithDefaults({
+const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
+  requestWithDefaults({
     url: `${options.url}/inv-playbook/${newIncident.id}`,
-    method: 'get',
+    method: 'GET',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'

@@ -5,19 +5,17 @@ const { _P } = require('./dataTransformations');
 const { checkForInternalDemistoError } = require('./handleError');
 
 const getPlaybookRunHistoryForIncidents = (
-  entitiesPartition,
   incidents,
   options,
   Logger,
-  axiosWithDefaults
+  requestWithDefaults
 ) =>
   _P.map(incidents, async (incident) => {
     const playbookRunHistory = await getPlaybookRunHistory(
-      entitiesPartition,
       incident,
       options,
       Logger,
-      axiosWithDefaults
+      requestWithDefaults
     );
 
     const pbHistoryWithFormattedDates = formatPlaybookRunHistory(playbookRunHistory);
@@ -29,23 +27,17 @@ const getPlaybookRunHistoryForIncidents = (
   });
 
 const getPlaybookRunHistory = async (
-  entitiesPartition,
   incident,
   options,
   Logger,
-  axiosWithDefaults
+  requestWithDefaults
 ) => {
-  const { data: playbookRunHistory } = await axiosWithDefaults({
+  const { body: playbookRunHistory } = await requestWithDefaults({
     url: `${options.url}/inv-playbook/${incident.id}`,
-    method: 'get',
+    method: 'GET',
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
-    },
-    data: {
-      filter: {
-        name: entitiesPartition.map(({ value }) => value)
-      }
     }
   })
     .then(checkForInternalDemistoError)
