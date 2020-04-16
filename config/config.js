@@ -4,6 +4,7 @@ module.exports = {
   description: 'Demisto provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
   styles: ['./styles/styles.less'],
+  onDemandOnly: true,
   block: {
     component: {
       file: './components/block.js'

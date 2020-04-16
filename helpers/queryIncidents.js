@@ -1,6 +1,7 @@
 const { checkForInternalDemistoError } = require('./handleError');
 
 const queryIncidents = async (options, entitiesPartition, Logger, requestWithDefaults) => {
+  const entityValues = entitiesPartition.map(({ value }) => value);
   const {
     body: { data: incidents }
   } = await requestWithDefaults({
@@ -12,7 +13,8 @@ const queryIncidents = async (options, entitiesPartition, Logger, requestWithDef
     },
     body: {
       filter: {
-        name: entitiesPartition.map(({ value }) => value)
+        name: entityValues,
+        labels: entityValues
       }
     }
   })
