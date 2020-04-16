@@ -13,7 +13,9 @@ const formatDomistoResults = (
   _.flatMap(entityGroupsWithPlaybooks, ({ entities, playbooks }) =>
     entities.map((entity) => {
       const incidentsForThisEntity = incidentsWithPlaybookRunHistory.filter(
-        ({ name }) => name === entity.value
+        ({ name, labels }) =>
+          name.includes(entity.value) ||
+          labels.some(({ value }) => value.includes(entity.value))
       );
 
       const incidentFoundInDemisto =
@@ -70,17 +72,17 @@ const formatIncidentDate = ({ created, ...incident }) => ({
 });
 
 const createSummary = (results) => {
-  const result = {
-    ...results[0],
-    severity: results[0].severity || 'Unknown'
-  };
-  const labels = result.labels.map(({ value }) => value);
-  const summary = [
-    result.type,
-    `Severity: ${result.severity}`,
-    result.category,
-    ...labels
-  ];
+  const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
+  
+  const uniqFlatMap = (func) => _.chain(results).flatMap(func).uniq().value();
+
+  const labels = uniqFlatMap(({ labels }) => labels.map(({ value }) => value));
+  
+  const categories = uniqFlatMap(({ category }) => category);
+  
+  const types = uniqFlatMap(({ type }) => type);
+
+  const summary = [`Severity: ${severity}`, ...types, ...categories, ...labels];
 
   return summary.filter(_.identity);
 };
