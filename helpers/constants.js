@@ -21,8 +21,18 @@ const PLAYBOOK_SEARCH_TERMS = {
   email: "email"
 };
 
+const HUMAN_READABLE_SEVERITY_LEVELS = [
+  'Unknown',
+  'Informational',
+  'Low',
+  'Medium',
+  'High',
+  'Critical'
+];
+
 module.exports = {
   IGNORED_IPS,
   RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-  PLAYBOOK_SEARCH_TERMS
+  PLAYBOOK_SEARCH_TERMS,
+  HUMAN_READABLE_SEVERITY_LEVELS
 };

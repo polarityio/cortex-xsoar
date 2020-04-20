@@ -1,7 +1,10 @@
 const _ = require('lodash');
 const moment = require('moment');
 
-const { RELEVANT_INDICATOR_SEARCH_RESULT_KEYS } = require('./constants');
+const {
+  RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
+  HUMAN_READABLE_SEVERITY_LEVELS
+} = require('./constants');
 
 const { getKeys } = require('./dataTransformations');
 
@@ -81,8 +84,13 @@ const createSummary = (results) => {
   const categories = uniqFlatMap(({ category }) => category);
   
   const types = uniqFlatMap(({ type }) => type);
-
-  const summary = [`Severity: ${severity}`, ...types, ...categories, ...labels];
+  
+  const summary = [
+    `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`,
+    ...types,
+    ...categories,
+    ...labels
+  ];
 
   return summary.filter(_.identity);
 };
