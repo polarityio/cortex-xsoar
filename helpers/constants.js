@@ -21,14 +21,14 @@ const PLAYBOOK_SEARCH_TERMS = {
   email: "email"
 };
 
-const HUMAN_READABLE_SEVERITY_LEVELS = [
-  'Unknown',
-  'Informational',
-  'Low',
-  'Medium',
-  'High',
-  'Critical'
-];
+const HUMAN_READABLE_SEVERITY_LEVELS = {
+  "0": 'Unknown',
+  "0.5": 'Informational',
+  "1": 'Low',
+  "2": 'Medium',
+  "3": 'High',
+  "4": 'Critical'
+};
 
 module.exports = {
   IGNORED_IPS,
