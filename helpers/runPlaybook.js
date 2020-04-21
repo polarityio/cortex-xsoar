@@ -1,7 +1,7 @@
-const { createSummary } = require('./formatDomistoResults');
+const { createSummary } = require('./formatDemistoResults');
 
 const { checkForInternalDemistoError } = require('./handleError');
-const { formatIncidentDate } = require('./formatDomistoResults');
+const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (

@@ -8,7 +8,7 @@ const queryIncidents = require('./queryIncidents');
 const {
   getPlaybookRunHistoryForIncidents
 } = require('./getPlaybookRunHistoryForIncidents');
-const { formatDomistoResults } = require('./formatDomistoResults');
+const { formatDemistoResults } = require('./formatDemistoResults');
 
 const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
   _partitionFlatMap(
@@ -37,8 +37,8 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
         Logger,
         requestWithDefaults
       );
-      
-      const lookupResults = formatDomistoResults(
+
+      const lookupResults = formatDemistoResults(
         entityGroupsWithPlaybooks,
         incidentsWithPlaybookRunHistory,
         options

@@ -62,9 +62,9 @@
                 href="#">Info</a>
       </li>
       <li class="nav-item">
-        <a 
-          {{action "changeTab" incidentIndex "history"}} 
-          class="nav-link {{if (eq incident.__activeTab "history") "active"}}" 
+        <a
+          {{action "changeTab" incidentIndex "history"}}
+          class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
           href="#"
         >
           Playbook History ({{incident.pbHistory.length}})
@@ -94,31 +94,29 @@
           <span class="p-value">{{incident.category}}</span>
         </div>
       {{/if}}
-      {{#if incident.severity}}
-        <div>
-          <span class="p-key">Severity:</span>
-          <span class="p-value">
-            {{#if (eq incident.severity 0)}}
-              <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span>Unknown
-            {{/if}}
-            {{#if (eq incident.severity 0.5)}}
-              <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span>Information
-            {{/if}}
-            {{#if (eq incident.severity 1)}}
-              <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span>Low
-            {{/if}}
-            {{#if (eq incident.severity 2)}}
-              <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span>Medium
-            {{/if}}
-            {{#if (eq incident.severity 3)}}
-              <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span>High
-            {{/if}}
-            {{#if (eq incident.severity 4)}}
-              <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span>Critical
-            {{/if}}
-          </span>
-        </div>
-      {{/if}}
+      <div>
+        <span class="p-key">Severity:</span>
+        <span class="p-value">
+          {{#unless incident.severity}}
+            <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
+          {{/unless}}
+          {{#if (eq incident.severity 0.5)}}
+            <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
+          {{/if}}
+          {{#if (eq incident.severity 1)}}
+            <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
+          {{/if}}
+          {{#if (eq incident.severity 2)}}
+            <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
+          {{/if}}
+          {{#if (eq incident.severity 3)}}
+            <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
+          {{/if}}
+          {{#if (eq incident.severity 4)}}
+            <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
+          {{/if}}
+        </span>
+      </div>
       {{#if incident.reason}}
         <div>
           <span class="p-key">Reason:</span>
@@ -143,7 +141,7 @@
           <span class="p-value">{{incident.owner}}</span>
         </div>
       {{/if}}
-      
+
       {{#if (and incident.labels incident.labels.length)}}
         <div class="p-title">
           {{fa-icon "tag" fixedWidth=true}} Labels
@@ -181,8 +179,8 @@
             {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
           {{/if}}
         </div>
-        <button 
-          {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}} 
+        <button
+          {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}}
           class="p-btn btn btn-light mt-1"
           disabled={{incident.__running}}
         >

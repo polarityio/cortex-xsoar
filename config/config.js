@@ -29,7 +29,7 @@ module.exports = {
       key: 'url',
       name: 'Url',
       description:
-        'The base URL for the Demisto API including the schema (i.e., https://)',
+        'The base URL for the Demisto API which should include the schema (i.e., https://)',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -38,7 +38,7 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'The API Key found Demisto Dashboard Settings',
+      description: 'A valid Demisto API Key which can be found in your Demisto Dashboard Settings',
       default: '',
       type: 'password',
       userCanEdit: true,

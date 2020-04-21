@@ -8,7 +8,7 @@ const {
 
 const { getKeys } = require('./dataTransformations');
 
-const formatDomistoResults = (
+const formatDemistoResults = (
   entityGroupsWithPlaybooks,
   incidentsWithPlaybookRunHistory,
   options
@@ -28,7 +28,7 @@ const formatDomistoResults = (
 
       return (
         incidentFoundInDemisto ?
-          _formatFoundIncidentResults(entity, incidentsForThisEntity, playbooks, options) : 
+          _formatFoundIncidentResults(entity, incidentsForThisEntity, playbooks, options) :
         isOnDemand ?
           _formatNewIncidentResults(entity, playbooks, options) :
           { entity, data: null }
@@ -37,7 +37,7 @@ const formatDomistoResults = (
   );
 
 const _formatFoundIncidentResults = (
-  entity, 
+  entity,
   incidentsForThisEntity,
   playbooks,
   options
@@ -76,15 +76,15 @@ const formatIncidentDate = ({ created, ...incident }) => ({
 
 const createSummary = (results) => {
   const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
-  
+
   const uniqFlatMap = (func) => _.chain(results).flatMap(func).uniq().value();
 
   const labels = uniqFlatMap(({ labels }) => labels.map(({ value }) => value));
-  
+
   const categories = uniqFlatMap(({ category }) => category);
-  
+
   const types = uniqFlatMap(({ type }) => type);
-  
+
   const summary = [
     `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`,
     ...types,
@@ -96,7 +96,7 @@ const createSummary = (results) => {
 };
 
 module.exports = {
-  formatDomistoResults,
+  formatDemistoResults,
   formatIncidentDate,
   createSummary
 };
