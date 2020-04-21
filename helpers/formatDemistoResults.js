@@ -79,11 +79,11 @@ const createSummary = (results) => {
 
   const uniqFlatMap = (func) => _.chain(results).flatMap(func).uniq().value();
 
-  const labels = uniqFlatMap(({ labels }) => labels.map(({ value }) => value));
+  const labels = uniqFlatMap(({ labels }) => labels.map(({ type, value }) => `${type}: ${value}`));
 
-  const categories = uniqFlatMap(({ category }) => category);
+  const categories = uniqFlatMap(({ category }) => `Category: ${category}`);
 
-  const types = uniqFlatMap(({ type }) => type);
+  const types = uniqFlatMap(({ type }) => `Type: ${type}`);
 
   const summary = [
     `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`,
