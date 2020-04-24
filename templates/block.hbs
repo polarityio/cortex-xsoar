@@ -1,0 +1,243 @@
+{{#if (and onDemand (not incidents))}}
+  <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Info</h1>
+  <div>
+    <span class="p-key">Name: </span>
+    <span class="p-value">{{entityValue}}</span>
+  </div>
+  <p>
+    Status: <b>Polarity did not find this entity in Demisto</b>
+  </p>
+  <div class="view-in-ts create-in-phantom">
+    <a class="p-link" href="{{baseUrl}}/incidents">Create Incident in Demisto Dashboard
+      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+  </div>
+
+  <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Incident and Run Playbook</h1>
+
+  <select class="w-100" size=5 onchange={{action (mut newIncidentPlaybookId) value="target.value"}}>
+    {{#each playbooks as |playbook|}}
+      <option value="{{playbook.id}}">{{playbook.name}}</option>
+    {{/each}}
+  </select>
+  <div class="d-flex flex-row justify-content-between align-items-center">
+    <div>
+      {{#if isRunning}}
+        {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+      {{/if}}
+    </div>
+    <button
+      {{action "runPlaybook" newIncidentPlaybookId}}
+      class="p-btn btn btn-light mt-1"class="p-btn btn btn-light mt-1"
+      disabled={{isRunning}}
+    >
+      Create & Run
+    </button>
+  </div>
+  {{#if incidentMessage}}
+    <div class="alert alert-info mt-1">
+      {{incidentMessage}}
+    </div>
+  {{/if}}
+  {{#if incidentErrorMessage}}
+    <div class="alert alert-danger mt-1">
+      {{incidentErrorMessage}}
+    </div>
+  {{/if}}
+{{else}}
+  {{#each incidents as |incident incidentIndex|}}
+    {{#if (gt incidentIndex 0)}}
+      <hr>
+    {{/if}}
+    <div class="incident-name">
+      <span class="p-key">Name:</span>
+      <span class="p-value">{{incident.name}}</span>
+    </div>
+    <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Demisto
+      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+
+    <ul class="nav nav-tabs mt-2">
+      <li class="nav-item">
+        <a {{action "changeTab" incidentIndex "info"}}
+                class="nav-link  {{if (or (eq incident.__activeTab "info")(not incident.__activeTab)) "active"}}"
+                href="#">Info</a>
+      </li>
+      <li class="nav-item">
+        <a
+          {{action "changeTab" incidentIndex "history"}}
+          class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
+          href="#"
+        >
+          Playbook History ({{incident.pbHistory.length}})
+        </a>
+      </li>
+    </ul>
+
+    {{#if (or (eq incident.__activeTab "info") (not incident.__activeTab))}}
+      <div class="p-title">
+        {{fa-icon "info" fixedWidth=true}} Incident Info
+      </div>
+      {{#if incident.name}}
+        <div>
+          <span class="p-key">Name:</span>
+          <span class="p-value">{{incident.name}}</span>
+        </div>
+      {{/if}}
+      {{#if incident.type}}
+        <div>
+          <span class="p-key">Type:</span>
+          <span class="p-value">{{incident.type}}</span>
+        </div>
+      {{/if}}
+      {{#if incident.category}}
+        <div>
+          <span class="p-key">Category:</span>
+          <span class="p-value">{{incident.category}}</span>
+        </div>
+      {{/if}}
+      <div>
+        <span class="p-key">Severity:</span>
+        <span class="p-value">
+          {{#unless incident.severity}}
+            <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
+          {{/unless}}
+          {{#if (eq incident.severity 0.5)}}
+            <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
+          {{/if}}
+          {{#if (eq incident.severity 1)}}
+            <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
+          {{/if}}
+          {{#if (eq incident.severity 2)}}
+            <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
+          {{/if}}
+          {{#if (eq incident.severity 3)}}
+            <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
+          {{/if}}
+          {{#if (eq incident.severity 4)}}
+            <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
+          {{/if}}
+        </span>
+      </div>
+      {{#if incident.reason}}
+        <div>
+          <span class="p-key">Reason:</span>
+          <span class="p-value">{{incident.reason}}</span>
+        </div>
+      {{/if}}
+      {{#if incident.details}}
+        <div>
+          <span class="p-key">Details:</span>
+          <span class="p-value">{{incident.details}}</span>
+        </div>
+      {{/if}}
+      {{#if incident.created}}
+        <div>
+          <span class="p-key">Date Created:</span>
+          <span class="p-value">{{incident.created}}</span>
+        </div>
+      {{/if}}
+      {{#if incident.owner}}
+        <div>
+          <span class="p-key">Owner:</span>
+          <span class="p-value">{{incident.owner}}</span>
+        </div>
+      {{/if}}
+
+      {{#if (and incident.labels incident.labels.length)}}
+        <div class="p-title">
+          {{fa-icon "tag" fixedWidth=true}} Labels
+        </div>
+        <div>
+          {{#each incident.labels as |label|}}
+            <div>
+              <span class="p-key">{{label.type}}:</span>
+              <span class="p-value">{{label.value}}</span>
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+
+      <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
+      {{!-- Leaving here until we have an overlay window based power-select
+      {{#power-select
+              options=details.playbooks
+              selected=selectedPlaybook
+              searchEnabled=true
+              searchField="name"
+              placeholder="Playbooks"
+              onchange=(action (mut selectedPlaybook)) as |playbook|}}
+        {{humanize playbook.name}}
+      {{/power-select}}
+      --}}
+      <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
+        {{#each playbooks as |playbook|}}
+          <option value="{{playbook.id}}">{{playbook.name}}</option>
+        {{/each}}
+      </select>
+      <div class="d-flex flex-row justify-content-between align-items-center">
+        <div>
+          {{#if incident.__running}}
+            {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+          {{/if}}
+        </div>
+        <button
+          {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}}
+          class="p-btn btn btn-light mt-1"
+          disabled={{incident.__running}}
+        >
+          Run Playbook
+        </button>
+      </div>
+      {{#if incident.__message}}
+        <div class="alert alert-info mt-1">
+          {{incident.__message}}
+        </div>
+      {{/if}}
+      {{#if incident.__errorMessage}}
+        <div class="alert alert-danger mt-1">
+          {{incident.__errorMessage}}
+        </div>
+      {{/if}}
+    {{/if}}
+
+    {{#if (eq incident.__activeTab "history")}}
+      <h1 class="p-title">
+        {{fa-icon "history" fixedWidth=true}}
+        Playbook Run History ({{incident.pbHistory.length}})
+      </h1>
+      <div class="wrap-incident">
+        {{#if incident.pbHistory.length}}
+          {{#each incident.pbHistory as |playbookRun|}}
+            <div class="playbook-container">
+              <span class="p-title">{{playbookRun.name}}</span>
+              {{#if playbookRun.status}}
+                <div class="playbook-run-date">
+                  <span class="p-key">Type:</span>
+                  <span class="p-value">Current Work Plan</span>
+                </div>
+                <div>
+                  <span class="p-key">Status:</span>
+                  <span class="p-value">{{capitalize playbookRun.status}}</span>
+                </div>
+                <div>
+                  <span class="p-key">Run Date:</span>
+                  <span class="p-value">{{playbookRun.date}}</span>
+                </div>
+                <div class="work-plan-link">
+                  <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
+                    {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                </div>
+              {{else}}
+                <div class="playbook-run-date">
+                  <span class="p-key">Date:</span>
+                  <span class="p-value">{{playbookRun.date}}</span>
+                </div>
+              {{/if}}
+            </div>
+          {{/each}}
+        {{else}}
+          <span class="p-value">None</span>
+        {{/if}}
+      </div>
+    {{/if}}
+  {{/each}}
+{{/if}}
