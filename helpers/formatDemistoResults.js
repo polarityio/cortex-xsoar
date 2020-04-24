@@ -17,8 +17,10 @@ const formatDemistoResults = (
     entities.map((entity) => {
       const incidentsForThisEntity = incidentsWithPlaybookRunHistory.filter(
         ({ name, labels }) =>
-          name.includes(entity.value) ||
-          labels.some(({ value }) => value.includes(entity.value))
+          name.toLowerCase().includes(entity.value.toLowerCase()) ||
+          labels.some(({ value }) =>
+            value.toLowerCase().includes(entity.value.toLowerCase())
+          )
       );
 
       const incidentFoundInDemisto =
@@ -77,22 +79,28 @@ const formatIncidentDate = ({ created, ...incident }) => ({
 const createSummary = (results) => {
   const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
 
-  const uniqFlatMap = (func) => _.chain(results).flatMap(func).uniq().value();
+  const uniqFlatMap = (func) =>
+    _.chain(results)
+      .flatMap(func)
+      .uniq()
+      .filter((x) => !_.isEmpty(x))
+      .value();
 
-  const labels = uniqFlatMap(({ labels }) => labels.map(({ type, value }) => `${type}: ${value}`));
+  const labels = uniqFlatMap(({ labels }) =>
+    labels.map(({ type, value }) => type && value && `${type}: ${value}`)
+  );
 
-  const categories = uniqFlatMap(({ category }) => `Category: ${category}`);
+  const categories = uniqFlatMap(({ category }) => category && `Category: ${category}`);
 
-  const types = uniqFlatMap(({ type }) => `Type: ${type}`);
+  const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
-  const summary = [
-    `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`,
-    ...types,
-    ...categories,
-    ...labels
-  ];
+  const summary = [...types, ...categories, ...labels].concat(
+    severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
+      ? `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`
+      : []
+  );
 
-  return summary.filter(_.identity);
+  return summary;
 };
 
 module.exports = {
