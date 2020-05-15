@@ -1,7 +1,7 @@
 module.exports = {
-  name: 'Demisto',
-  acronym: 'DE',
-  description: 'Demisto provides automation and security orchestration capabilities.',
+  name: 'Cortex XSOAR',
+  acronym: 'CX',
+  description: 'Cortex XSOAR provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
   styles: ['./styles/styles.less'],
   onDemandOnly: true,
@@ -29,7 +29,7 @@ module.exports = {
       key: 'url',
       name: 'Url',
       description:
-        'The base URL for the Demisto API which should include the schema (i.e., https://)',
+        'The base URL for the Cortex XSOAR API which should include the schema (i.e., https://)',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -38,7 +38,7 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid Demisto API Key which can be found in your Demisto Dashboard Settings',
+      description: 'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
       userCanEdit: true,

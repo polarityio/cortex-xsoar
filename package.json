@@ -1,6 +1,6 @@
 {
   "main": "./integration.js",
-  "name": "demisto",
+  "name": "cortex-xsoar",
   "version": "3.0.0-beta",
   "private": true,
   "license": "MIT",
