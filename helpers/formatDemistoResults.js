@@ -1,4 +1,4 @@
-const _ = require('lodash');
+const fp = require('lodash/fp');
 const moment = require('moment');
 
 const {
@@ -11,36 +11,65 @@ const { getKeys } = require('./dataTransformations');
 const formatDemistoResults = (
   entityGroupsWithPlaybooks,
   incidentsWithPlaybookRunHistory,
-  options
+  indicators,
+  options,
+  Logger
 ) =>
-  _.flatMap(entityGroupsWithPlaybooks, ({ entities, playbooks }) =>
-    entities.map((entity) => {
-      const incidentsForThisEntity = incidentsWithPlaybookRunHistory.filter(
-        ({ name, labels }) =>
-          name.toLowerCase().includes(entity.value.toLowerCase()) ||
-          labels.some(({ value }) =>
-            value.toLowerCase().includes(entity.value.toLowerCase())
-          )
-      );
+  fp.flatMap(
+    ({ entities, playbooks }) =>
+      fp.map((entity) => {
+        const incidentsForThisEntity = getIncidentsForThisEntity(
+          incidentsWithPlaybookRunHistory,
+          entity
+        );
 
-      const incidentFoundInDemisto =
-        incidentsForThisEntity && incidentsForThisEntity.length;
+        const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
 
-      const isOnDemand = entity.requestContext.requestType === 'OnDemand';
+        const isOnDemand = entity.requestContext.requestType === 'OnDemand';
 
-      return (
-        incidentFoundInDemisto ?
-          _formatFoundIncidentResults(entity, incidentsForThisEntity, playbooks, options) :
-        isOnDemand ?
-          _formatNewIncidentResults(entity, playbooks, options) :
-          { entity, data: null }
-      );
-    })
+        return incidentsForThisEntity.length
+          ? _formatFoundIncidentResults(
+              entity,
+              incidentsForThisEntity,
+              indicatorsForThisEntity,
+              playbooks,
+              options
+            )
+          : isOnDemand
+          ? _formatNewIncidentResults(entity, playbooks, options)
+          : { entity, data: null };
+      }, entities),
+    entityGroupsWithPlaybooks
+  );
+
+const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
+  fp.filter(
+    ({ name, labels }) =>
+      fp.flow(
+        fp.toLower,
+        fp.includes(fp.flow(fp.getOr('', 'value'), fp.toLower)(entity))
+      )(name) ||
+      fp.some(
+        fp.flow(
+          fp.getOr('', 'value'),
+          fp.toLower,
+          fp.includes(fp.flow(fp.getOr('', 'value'), fp.toLower)(entity))
+        ),
+        labels
+      ),
+    incidentsWithPlaybookRunHistory
+  );
+
+const getIndicatorsForThisEntity = (indicators, entity) =>
+  fp.filter(
+    ({ value, labels }) => fp.toLower(value) === fp.toLower(entity.value),
+    indicators
   );
 
 const _formatFoundIncidentResults = (
   entity,
   incidentsForThisEntity,
+  indicatorsForThisEntity,
   playbooks,
   options
 ) => ({
@@ -53,6 +82,7 @@ const _formatFoundIncidentResults = (
         RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
         incidentsForThisEntity
       ).map(formatIncidentDate),
+      indicators: formatIndicatorDates(indicatorsForThisEntity),
       baseUrl: `${options.url}/#`
     }
   }
@@ -76,15 +106,23 @@ const formatIncidentDate = ({ created, ...incident }) => ({
   created: moment(created).format('MMM D YY, h:mm A')
 });
 
+const formatIndicatorDates = fp.map(
+  ({ firstSeen, lastSeen, ...indicatorForThisEntity }) => ({
+    ...indicatorForThisEntity,
+    firstSeen: moment(firstSeen).format('MMM D YY, h:mm A'),
+    lastSeen: moment(lastSeen).format('MMM D YY, h:mm A')
+  })
+);
+
 const createSummary = (results) => {
   const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
 
   const uniqFlatMap = (func) =>
-    _.chain(results)
-      .flatMap(func)
-      .uniq()
-      .filter((x) => !_.isEmpty(x))
-      .value();
+    fp.flow(
+      fp.flatMap(func),
+      fp.uniq,
+      fp.filter((x) => !fp.isEmpty(x))
+    )(results);
 
   const labels = uniqFlatMap(({ labels }) =>
     labels.map(({ type, value }) => type && value && `${type}: ${value}`)

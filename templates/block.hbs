@@ -57,10 +57,17 @@
 
     <ul class="nav nav-tabs mt-2">
       <li class="nav-item">
-        <a {{action "changeTab" incidentIndex "info"}}
-                class="nav-link  {{if (or (eq incident.__activeTab "info")(not incident.__activeTab)) "active"}}"
-                href="#">Info</a>
+        <a {{action "changeTab" incidentIndex "incident"}}
+                class="nav-link  {{if (or (eq incident.__activeTab "incident")(not incident.__activeTab)) "active"}}"
+                href="#">Incident</a>
       </li>
+      {{#if indicators.length}}
+        <li class="nav-item">
+          <a {{action "changeTab" incidentIndex "indicators"}}
+                  class="nav-link  {{if (eq incident.__activeTab "indicators") "active"}}"
+                  href="#">Indicators ({{indicators.length}})</a>
+        </li>
+      {{/if}}
       <li class="nav-item">
         <a
           {{action "changeTab" incidentIndex "history"}}
@@ -72,7 +79,7 @@
       </li>
     </ul>
 
-    {{#if (or (eq incident.__activeTab "info") (not incident.__activeTab))}}
+    {{#if (or (eq incident.__activeTab "incident") (not incident.__activeTab))}}
       <div class="p-title">
         {{fa-icon "info" fixedWidth=true}} Incident Info
       </div>
@@ -94,6 +101,7 @@
           <span class="p-value">{{incident.category}}</span>
         </div>
       {{/if}}
+
       <div>
         <span class="p-key">Severity:</span>
         <span class="p-value">
@@ -117,6 +125,7 @@
           {{/if}}
         </span>
       </div>
+
       {{#if incident.reason}}
         <div>
           <span class="p-key">Reason:</span>
@@ -129,6 +138,8 @@
           <span class="p-value">{{incident.details}}</span>
         </div>
       {{/if}}
+
+      
       {{#if incident.created}}
         <div>
           <span class="p-key">Date Created:</span>
@@ -139,6 +150,12 @@
         <div>
           <span class="p-key">Owner:</span>
           <span class="p-value">{{incident.owner}}</span>
+        </div>
+      {{/if}}
+      {{#if (not indicators.length)}}
+        <div>
+          <span class="p-key">Indicators Found:</span>
+          <span class="p-value"><em>None</em></span>
         </div>
       {{/if}}
 
@@ -157,17 +174,6 @@
       {{/if}}
 
       <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
-      {{!-- Leaving here until we have an overlay window based power-select
-      {{#power-select
-              options=details.playbooks
-              selected=selectedPlaybook
-              searchEnabled=true
-              searchField="name"
-              placeholder="Playbooks"
-              onchange=(action (mut selectedPlaybook)) as |playbook|}}
-        {{humanize playbook.name}}
-      {{/power-select}}
-      --}}
       <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
         {{#each playbooks as |playbook|}}
           <option value="{{playbook.id}}">{{playbook.name}}</option>
@@ -199,6 +205,66 @@
       {{/if}}
     {{/if}}
 
+    {{#if (eq incident.__activeTab "indicators")}}
+      <div class="p-title">
+        {{fa-icon "info" fixedWidth=true}} Indicator Info
+      </div>
+      {{#each indicators as |indicator indicatorIndex|}}
+        {{#if (gt incidentIndex 0)}}
+          <hr>
+        {{/if}}
+        
+        {{#if indicator.value}}
+          <div>
+            <span class="p-key">Value:</span>
+            <span class="p-value">{{indicator.value}}</span>
+          </div>
+        {{/if}}
+        
+        {{#if indicator.indicator_type}}
+          <div>
+            <span class="p-key">Type:</span>
+            <span class="p-value">{{indicator.indicator_type}}</span>
+          </div>
+        {{/if}}
+        <div>
+          <span class="p-key">Reputation:</span>
+          <span class="p-value"><em>
+            {{#if (eq indicator.score 1)}}
+              <span style="color: #00CD33; font-weight: 600">Good</span>
+            {{else}}
+              {{#if (eq indicator.score 2)}}
+                <span style="color: #FF9000; font-weight: 600">Suspicious</span>
+              {{else}}
+                <span style="color: #9aa0a3; font-weight: 600">None</span>
+              {{/if}}
+            {{/if}}
+          </em></span>
+        </div>
+        <div>
+          <span class="p-key">Related Incidents:</span>
+          <span class="p-value">{{if indicator.relatedIncCount indicator.relatedIncCount "0"}}</span>
+        </div>
+        {{#if indicator.firstSeen}}
+          <div>
+            <span class="p-key">First Seen:</span>
+            <span class="p-value">{{indicator.firstSeen}}</span>
+          </div>
+        {{/if}}
+        {{#if indicator.lastSeen}}
+          <div>
+            <span class="p-key">Last Seen:</span>
+            <span class="p-value">{{indicator.lastSeen}}</span>
+          </div>
+        {{/if}}
+          <div class="work-plan-link">
+            <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
+              Show in Cortex XSOAR
+              {{fa-icon "external-link-square" class="external-link-icon"}}
+            </a>
+          </div>
+      {{/each}}
+    {{/if}}
     {{#if (eq incident.__activeTab "history")}}
       <h1 class="p-title">
         {{fa-icon "history" fixedWidth=true}}
@@ -240,4 +306,5 @@
       </div>
     {{/if}}
   {{/each}}
+  
 {{/if}}

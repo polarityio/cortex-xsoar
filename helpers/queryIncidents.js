@@ -1,7 +1,12 @@
-const { checkForInternalDemistoError } = require('./handleError');
+const fp = require('lodash/fp');
 
-const queryIncidents = async (options, entitiesPartition, Logger, requestWithDefaults) => {
-  const entityValues = entitiesPartition.map(({ value }) => value);
+const queryIncidents = async (
+  entitiesPartition,
+  options,
+  requestWithDefaults,
+  Logger
+) => {
+  const entityValues = fp.map(fp.get('value'), entitiesPartition);
   const {
     body: { data: incidents }
   } = await requestWithDefaults({
@@ -17,13 +22,11 @@ const queryIncidents = async (options, entitiesPartition, Logger, requestWithDef
         labels: entityValues
       }
     }
-  })
-    .then(checkForInternalDemistoError)
-    .catch((error) => {
-      Logger.error({ error }, 'Incident Query Error');
-      throw error;
-    });
-    
+  }).catch((error) => {
+    Logger.error({ error }, 'Incident Query Error');
+    throw error;
+  });
+
   return incidents;
 };
 

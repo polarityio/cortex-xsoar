@@ -11,7 +11,7 @@ let Logger;
 let requestWithDefaults;
 const startup = (logger) => {
   Logger = logger;
-  requestWithDefaults = createRequestWithDefaults();
+  requestWithDefaults = createRequestWithDefaults(Logger);
 };
 
 const doLookup = async (entities, { url, ..._options }, cb) => {

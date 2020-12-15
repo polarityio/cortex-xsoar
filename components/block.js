@@ -2,6 +2,7 @@ polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('block.data.summary'),
   incidents: Ember.computed.alias('details.incidents'),
+  indicators: Ember.computed.alias('details.indicators'),
   playbooks: Ember.computed.alias('details.playbooks'),
   baseUrl: Ember.computed.alias('details.baseUrl'),
   entityValue: Ember.computed.alias('block.entity.value'),
@@ -18,7 +19,7 @@ polarity.export = PolarityComponent.extend({
     },
     runPlaybook: function(playbookId, incidentIndex, incidentId) {
       const outerThis = this;
-      if (!playbookId) return this.setMessage(incidentIndex, 'Select a playbook to run.');
+      if (!playbookId) return this.setErrorMessage(incidentIndex, 'Must select a playbook to run.');
 
       this.setMessage(incidentIndex, '');
       this.setRunning(incidentIndex, true);
@@ -45,11 +46,16 @@ polarity.export = PolarityComponent.extend({
         .catch((err) => {
           outerThis.setErrorMessage(
             incidentIndex,
-            `Failed: ${err.message || err.title || err.description || 'Unknown Reason'}`
+            `Failed: ${err.detail || err.message || err.title || 'Unknown Reason'}`
           );
         }).finally(() => {
           outerThis.setRunning(incidentIndex, false);
           outerThis.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            outerThis.setMessage(incidentIndex, '');
+            outerThis.setErrorMessage(incidentIndex, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }, 5000);
         });
     }
   },

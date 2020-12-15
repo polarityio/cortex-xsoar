@@ -5,7 +5,8 @@ const STATUS_CODE_ERROR_MESSAGE = {
   }),
   403: (error) => ({
     err: 'Token Expired',
-    detail: 'The Token has Expired.  Retry your request to reauthorize.'
+    detail:
+      'The Token has Expired or is Incorrect.  Verify your token is correct and retry your request to reauthorize.'
   }),
   404: (error) => ({
     err: 'Not Found',
@@ -20,6 +21,10 @@ const STATUS_CODE_ERROR_MESSAGE = {
   500: (error) => ({
     err: 'Server Error',
     detail: 'Unexpected Server Error -> ' + `${error.description}`
+  }),
+  internalDemistoError: (error) => ({
+    err: 'Internal Demisto Error',
+    detail: 'Internal Demisto Error -> ' + `${error.description}`
   }),
   unknown: (error) =>
     error.message.includes('getaddrinfo ENOTFOUND')
