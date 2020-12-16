@@ -108,9 +108,6 @@ const _formatNoIncidentFoundResults = (
   data: {
     summary: [
       'No Incident Found',
-      ...(indicatorsForThisEntity.length
-        ? [`Indicators Found: ${indicatorsForThisEntity.length}`]
-        : [])
     ],
     details: {
       playbooks,
@@ -145,22 +142,13 @@ const createSummary = (results, indicators) => {
       fp.filter((x) => !fp.isEmpty(x))
     )(results);
 
-  const labels = uniqFlatMap(({ labels }) =>
-    labels.map(({ type, value }) => type && value && `${type}: ${value}`)
-  );
-
-  const categories = uniqFlatMap(({ category }) => category && `Category: ${category}`);
-
   const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
   const summary = [
     ...types,
-    ...categories,
-    ...labels,
     ...(severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
       ? [`Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`]
       : []),
-    ...(indicators && indicators.length ? [`Indicators Found: ${indicators.length}`] : [])
   ];
 
   return summary;

@@ -4,13 +4,34 @@
   </div>
   {{#each indicators as |indicator indicatorIndex|}}
     {{#if (get expandableTitleStates indicatorIndex)}}
-      <a
-        href="#"
-        class="expandable-title"
-        {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-      >
-        <span class="text"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
-      </a>
+
+      {{#if (eq indicator.score 1)}}
+        <a
+          href="#"
+          class="expandable-title good"
+          {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+        >
+          <span class="text good"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
+        </a>
+      {{else}}
+        {{#if (eq indicator.score 2)}}
+          <a
+            href="#"
+            class="expandable-title suspicious"
+            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+          >
+            <span class="text suspicious"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
+          </a>
+        {{else}}
+          <a
+            href="#"
+            class="expandable-title none"
+            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+          >
+            <span class="text none"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
+          </a>
+        {{/if}}
+      {{/if}}
       
       {{#if indicator.indicator_type}}
         <div>
@@ -55,13 +76,33 @@
         </a>
       </div>
     {{else}}
-      <a
-        href="#"
-        class="expandable-title"
-        {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-      >
-        <span class="text">{{indicator.value}}</span> {{fa-icon "angle-down"}}
-      </a>
+      {{#if (eq indicator.score 1)}}
+        <a
+          href="#"
+          class="expandable-title good"
+          {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+        >
+          <span class="text good">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+        </a>
+      {{else}}
+        {{#if (eq indicator.score 2)}}
+          <a
+            href="#"
+            class="expandable-title suspicious"
+            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+          >
+            <span class="text suspicious">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+          </a>
+        {{else}}
+          <a
+            href="#"
+            class="expandable-title none"
+            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+          >
+            <span class="text none">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+          </a>
+        {{/if}}
+      {{/if}}
     {{/if}}
   {{/each}}
   {{#if (or allowIncidentCreation incidents.length)}}
