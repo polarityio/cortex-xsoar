@@ -14,6 +14,60 @@
 
   <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Incident and Run Playbook</h1>
 
+  <div class="select-container">
+    <span class="p-value">Details: </span>
+    <input
+      type="text"
+      class="w-100"
+      placeholder="Polarity Upload Details"
+      onchange={{action (mut submissionDetails) value="target.value"}}
+      value={{submissionDetails}}
+    />
+  </div>
+  <div class="select-container">
+    <span class="p-value">Type: </span>
+    {{#power-select
+      options=foundTypes
+      selected=selectedType
+      searchEnabled=true
+      searchField="info"
+      placeholder="Select Types..."
+      triggerClass="form-control"
+      search=(action "searchTypes")
+      searchMessage="Loading Types ..."
+      loadingMessage="Loading Types ..."
+      searchPlaceholder="Search Types"
+      closeOnSelect=true
+      onOpen=(action "searchTypes" "")
+      onChange=(action (mut selectedType)) as |type|}}
+      <span>{{type.name}}</span>
+    {{/power-select}}
+  </div>
+
+  <div class="select-container pt-1">
+    <span class="p-value">Severity: </span>
+    <select class="w-100" onchange={{action (mut severity) value="target.value"}}>
+      <option style="color: #9AA0A3; font-weight: 600" value="0">
+        {{fa-icon "bomb" fixedWidth=true}} Unknown
+      </option>
+      <option style="color: #3497FE; font-weight: 600" value="0.5">
+        {{fa-icon "bullhorn" fixedWidth=true}} Informational
+      </option>
+      <option style="color: #00CD33; font-weight: 600" value="1">
+        {{fa-icon "burn" fixedWidth=true}} Low
+      </option>
+      <option style="color: #FF9000; font-weight: 600" value="2">
+        {{fa-icon "fire" fixedWidth=true}} Medium
+      </option>
+      <option style="color: rgba(255, 23, 68, 0.7); font-weight: 600" value="3">
+        {{fa-icon "fire-alt" fixedWidth=true}} High
+      </option>
+      <option style="color: #D0021C; font-weight: 600" value="4">
+        {{fa-icon "exclamation" fixedWidth=true}} Critical
+      </option>
+    </select>
+  </div>
+
   <select class="w-100" size=5 onchange={{action (mut newIncidentPlaybookId) value="target.value"}}>
     {{#each playbooks as |playbook|}}
       <option value="{{playbook.id}}">{{playbook.name}}</option>

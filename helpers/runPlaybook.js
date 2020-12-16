@@ -4,11 +4,11 @@ const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (
-  Logger,
-  requestWithDefaults,
-  { data: { incidentId, playbookId, entityValue } },
+  { incidentId, playbookId, entityValue, submissionDetails, severity, selectedType },
   options,
+  requestWithDefaults,
   callback,
+  Logger,
   tryAgain = true
 ) => {
   try {
@@ -23,6 +23,9 @@ const runPlaybook = async (
       : await _createContainerAndRunPlaybook(
           entityValue,
           playbookId,
+          submissionDetails,
+          severity,
+          selectedType,
           options,
           Logger,
           requestWithDefaults
@@ -42,15 +45,22 @@ const runPlaybook = async (
           .includes('Could not find investigations'))
     ) {
       return runPlaybook(
-        Logger,
-        requestWithDefaults,
-        { data: { incidentId, playbookId, entityValue } },
+        {
+          incidentId,
+          playbookId,
+          entityValue,
+          submissionDetails,
+          severity,
+          selectedType
+        },
         options,
+        requestWithDefaults,
         callback,
+        Logger,
         false
       );
     }
-    
+
     Logger.error(
       {
         errors: [error],
@@ -109,20 +119,25 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaul
 const _createContainerAndRunPlaybook = async (
   entityValue,
   playbookId,
+  submissionDetails,
+  severity,
+  selectedType,
   options,
   Logger,
   requestWithDefaults
 ) => {
-  let newIncident;
   try {
     const { body: newlyCreatedIncident } = await _createIncidentAndRunPlaybook(
       entityValue,
       playbookId,
+      submissionDetails,
+      severity,
+      selectedType,
       options,
       requestWithDefaults
     );
 
-    newIncident = formatIncidentDate(newlyCreatedIncident);
+    const newIncident = formatIncidentDate(newlyCreatedIncident);
 
     await _startInvestigation(newIncident, options, requestWithDefaults);
 
@@ -141,13 +156,16 @@ const _createContainerAndRunPlaybook = async (
     };
   } catch (error) {
     Logger.error({ error }, 'Incident Creation or Playbook Run Error');
-    throw error
+    throw error;
   }
 };
 
 const _createIncidentAndRunPlaybook = (
   entityValue,
   playbookId,
+  submissionDetails,
+  severity,
+  selectedType,
   options,
   requestWithDefaults
 ) =>
@@ -161,14 +179,15 @@ const _createIncidentAndRunPlaybook = (
     body: {
       name: entityValue,
       playbookId,
-      severity: 3,
+      ...(selectedType && { type: selectedType.id }),
+      severity: fp.toNumber(severity),
       labels: [
         {
           type: 'Origin',
           value: 'Polarity'
         }
       ],
-      details: 'This is an Incident uploaded from Polarity'
+      ...(submissionDetails && { details: submissionDetails })
     }
   });
 
