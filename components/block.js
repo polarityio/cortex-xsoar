@@ -4,17 +4,22 @@ polarity.export = PolarityComponent.extend({
   incidents: Ember.computed.alias('details.incidents'),
   indicators: Ember.computed.alias('details.indicators'),
   playbooks: Ember.computed.alias('details.playbooks'),
+  allowIncidentCreation: Ember.computed.alias('details.allowIncidentCreation'),
   baseUrl: Ember.computed.alias('details.baseUrl'),
   entityValue: Ember.computed.alias('block.entity.value'),
-  onDemand: Ember.computed('block.entity.requestContext.requestType', function () {
-    return this.block.entity.requestContext.requestType === 'OnDemand';
-  }),
   submissionDetails: '',
   severity: 0,
   incidentMessage: '',
   incidentErrorMessage: '',
   incidentPlaybookId: null,
   isRunning: false,
+  expandableTitleStates: {},
+  init() {
+    if (!this.get('allowIncidentCreation') && !this.get('incidents')) {
+      this.set('expandableTitleStates', { 0: true });
+    }
+    this._super(...arguments);
+  },
   searchTypes: function (term, resolve, reject) {
     const outerThis = this;
     outerThis.setMessage(null, '');
@@ -52,6 +57,17 @@ polarity.export = PolarityComponent.extend({
       });
   },
   actions: {
+    toggleExpandableTitle: function (index) {
+      const modifiedExpandableTitleStates = Object.assign(
+        {},
+        this.get('expandableTitleStates'),
+        {
+          [index]: !this.get('expandableTitleStates')[index]
+        }
+      );
+
+      this.set('expandableTitleStates', modifiedExpandableTitleStates);
+    },
     changeTab: function (incidentIndex, tabName) {
       this.set(`incidents.${incidentIndex}.__activeTab`, tabName);
     },
@@ -62,8 +78,6 @@ polarity.export = PolarityComponent.extend({
     },
     runPlaybook: function (playbookId, incidentIndex, incidentId) {
       const outerThis = this;
-      if (!playbookId)
-        return this.setErrorMessage(incidentIndex, 'Must select a playbook to run.');
 
       this.setMessage(incidentIndex, '');
       this.setRunning(incidentIndex, true);

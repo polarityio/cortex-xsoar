@@ -25,7 +25,9 @@ const formatDemistoResults = (
 
         const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
 
-        const isOnDemand = entity.requestContext.requestType === 'OnDemand';
+        const allowIncidentCreation =
+          entity.requestContext.requestType === 'OnDemand' &&
+          options.allowIncidentCreation;
 
         return incidentsForThisEntity.length
           ? _formatFoundIncidentResults(
@@ -35,8 +37,14 @@ const formatDemistoResults = (
               playbooks,
               options
             )
-          : isOnDemand
-          ? _formatNewIncidentResults(entity, playbooks, options)
+          : indicatorsForThisEntity.length || allowIncidentCreation
+          ? _formatNoIncidentFoundResults(
+              entity,
+              indicatorsForThisEntity,
+              playbooks,
+              allowIncidentCreation,
+              options
+            )
           : { entity, data: null };
       }, entities),
     entityGroupsWithPlaybooks
@@ -75,7 +83,7 @@ const _formatFoundIncidentResults = (
 ) => ({
   entity,
   data: {
-    summary: createSummary(incidentsForThisEntity),
+    summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity),
     details: {
       playbooks,
       incidents: getKeys(
@@ -88,15 +96,28 @@ const _formatFoundIncidentResults = (
   }
 });
 
-const _formatNewIncidentResults = (entity, playbooks, options) => ({
+const _formatNoIncidentFoundResults = (
+  entity,
+  indicatorsForThisEntity,
+  playbooks,
+  allowIncidentCreation,
+  options
+) => ({
   entity,
   isVolatile: true,
   data: {
-    summary: ['No Incident Found'],
+    summary: [
+      'No Incident Found',
+      ...(indicatorsForThisEntity.length
+        ? [`Indicators Found: ${indicatorsForThisEntity.length}`]
+        : [])
+    ],
     details: {
       playbooks,
       onDemand: true,
-      baseUrl: `${options.url}/#`
+      baseUrl: `${options.url}/#`,
+      allowIncidentCreation,
+      indicators: formatIndicatorDates(indicatorsForThisEntity)
     }
   }
 });
@@ -114,7 +135,7 @@ const formatIndicatorDates = fp.map(
   })
 );
 
-const createSummary = (results) => {
+const createSummary = (results, indicators) => {
   const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
 
   const uniqFlatMap = (func) =>
@@ -132,11 +153,15 @@ const createSummary = (results) => {
 
   const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
-  const summary = [...types, ...categories, ...labels].concat(
-    severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
-      ? `Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`
-      : []
-  );
+  const summary = [
+    ...types,
+    ...categories,
+    ...labels,
+    ...(severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
+      ? [`Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`]
+      : []),
+    ...(indicators && indicators.length ? [`Indicators Found: ${indicators.length}`] : [])
+  ];
 
   return summary;
 };

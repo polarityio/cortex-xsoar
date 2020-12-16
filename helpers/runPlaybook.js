@@ -155,7 +155,7 @@ const _createContainerAndRunPlaybook = async (
       newSummary: createSummary([newIncident])
     };
   } catch (error) {
-    Logger.error({ error }, 'Incident Creation or Playbook Run Error');
+    Logger.error(error, 'Incident Creation or Playbook Run Error');
     throw error;
   }
 };
@@ -178,7 +178,7 @@ const _createIncidentAndRunPlaybook = (
     },
     body: {
       name: entityValue,
-      playbookId,
+      ...(playbookId && { playbookId }),
       ...(selectedType && { type: selectedType.id }),
       severity: fp.toNumber(severity),
       labels: [

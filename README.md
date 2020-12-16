@@ -32,6 +32,10 @@ The Server URL where the Cortex XSOAR API instance is located.  The Server URL s
 
 The API token to use to authenticate with the Cortex XSOAR server.  See the official documentation for instructions on setting up an API token.
 
+### Allow Incident Creation
+
+If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity.
+
 ## Querying and Creation Details
 
 There are some current limitations to the integration in relation to the query and creation of Incidicents and Indicators due to some issues with Cortex XSOAR's API.  Currently we are finding that Indicator searches are not exhaustive meaning there could be other indicators in Cortex XSOAR that we are not finding. This is not happening often but is possible.

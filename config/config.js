@@ -43,6 +43,15 @@ module.exports = {
       type: 'password',
       userCanEdit: true,
       adminOnly: false
+    },
+    {
+      key: 'allowIncidentCreation',
+      name: 'Allow Incident Creation',
+      description: 'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: true,
+      adminOnly: false
     }
   ]
 };
