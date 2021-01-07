@@ -4,15 +4,21 @@ polarity.export = PolarityComponent.extend({
   incidents: Ember.computed.alias('details.incidents'),
   indicators: Ember.computed.alias('details.indicators'),
   playbooks: Ember.computed.alias('details.playbooks'),
-  allowIncidentCreation: Ember.computed.alias('details.allowIncidentCreation'),
+  allowIncidentCreation: Ember.computed.alias('block.userOptions.allowIncidentCreation'),
+  allowIndicatorCreation: Ember.computed.alias('block.userOptions.allowIndicatorCreation'),
   baseUrl: Ember.computed.alias('details.baseUrl'),
   entityValue: Ember.computed.alias('block.entity.value'),
   submissionDetails: '',
+  indicatorComment: '',
   severity: 0,
+  reputation: 0,
   incidentMessage: '',
   incidentErrorMessage: '',
+  indicatorMessage: '',
+  indicatorErrorMessage: '',
   incidentPlaybookId: null,
   isRunning: false,
+  isIndicatorRunning: false,
   expandableTitleStates: {},
   init() {
     if (!this.get('allowIncidentCreation') && !this.get('incidents')) {
@@ -20,7 +26,7 @@ polarity.export = PolarityComponent.extend({
     }
     this._super(...arguments);
   },
-  searchTypes: function (term, resolve, reject) {
+  searchIncidentTypes: function (term, resolve, reject) {
     const outerThis = this;
     outerThis.setMessage(null, '');
     outerThis.setErrorMessage(null, '');
@@ -28,19 +34,55 @@ polarity.export = PolarityComponent.extend({
 
     outerThis
       .sendIntegrationMessage({
-        action: 'searchTypes',
+        action: 'searchIncidentTypes',
         data: {
-          selectedType: outerThis.get('selectedType'),
+          selectedIncidentType: outerThis.get('selectedIncidentType'),
           term
         }
       })
       .then(({ types }) => {
-        outerThis.set('foundTypes', types);
+        outerThis.set('foundIncidentTypes', types);
       })
       .catch((err) => {
         outerThis.setErrorMessage(
           null,
-          'Search Types Failed: ' +
+          'Search Incident Types Failed: ' +
+            (err &&
+              (err.detail || err.err || err.message || err.title || err.description)) ||
+            'Unknown Reason'
+        );
+      })
+      .finally(() => {
+        outerThis.get('block').notifyPropertyChange('data');
+        setTimeout(() => {
+          outerThis.setMessage(null, '');
+          outerThis.setErrorMessage(null, '');
+          outerThis.get('block').notifyPropertyChange('data');
+        }, 5000);
+        resolve();
+      });
+  },
+  searchIndicatorTypes: function (term, resolve, reject) {
+    const outerThis = this;
+    outerThis.setMessage(null, '');
+    outerThis.setErrorMessage(null, '');
+    outerThis.get('block').notifyPropertyChange('data');
+
+    outerThis
+      .sendIntegrationMessage({
+        action: 'searchIndicatorTypes',
+        data: {
+          selectedIndicatorType: outerThis.get('selectedIndicatorType'),
+          term
+        }
+      })
+      .then(({ types }) => {
+        outerThis.set('foundIndicatorTypes', types);
+      })
+      .catch((err) => {
+        outerThis.setErrorMessage(
+          null,
+          'Search Indicator Types Failed: ' +
             (err &&
               (err.detail || err.err || err.message || err.title || err.description)) ||
             'Unknown Reason'
@@ -71,10 +113,54 @@ polarity.export = PolarityComponent.extend({
     changeTab: function (incidentIndex, tabName) {
       this.set(`incidents.${incidentIndex}.__activeTab`, tabName);
     },
-    searchTypes: function (term) {
+    searchIncidentTypes: function (term) {
       return new Ember.RSVP.Promise((resolve, reject) => {
-        Ember.run.debounce(this, this.searchTypes, term, resolve, reject, 500);
+        Ember.run.debounce(this, this.searchIncidentTypes, term, resolve, reject, 500);
       });
+    },
+    searchIndicatorTypes: function (term) {
+      return new Ember.RSVP.Promise((resolve, reject) => {
+        Ember.run.debounce(this, this.searchIndicatorTypes, term, resolve, reject, 500);
+      });
+    },
+    createIndicator: function () {
+      const outerThis = this;
+
+      this.set('indicatorMessage', '');
+      this.set('isIndicatorRunning', true);
+      this.get('block').notifyPropertyChange('data');
+
+      this.sendIntegrationMessage({
+        action: 'createIndicator',
+        data: {
+          entity: this.block.entity,
+          summary: this.get('summary'),
+          reputation: this.get('reputation'),
+          indicatorComment: this.get('indicatorComment'),
+          selectedIndicatorType: this.get('selectedIndicatorType')
+        }
+      })
+        .then(({ newIndicator, newSummary }) => {
+          if (newIndicator) outerThis.setIndicator(newIndicator);
+          if (newSummary) outerThis.setSummary(newSummary);
+
+          outerThis.setMessage(incidentIndex, 'Successfully Created Indicator');
+        })
+        .catch((err) => {
+          outerThis.set(
+            'indicatorErrorMessage',
+            `Failed: ${err.detail || err.message || err.title || 'Unknown Reason'}`
+          );
+        })
+        .finally(() => {
+          outerThis.set('isIndicatorRunning', false);
+          outerThis.get('block').notifyPropertyChange('data');
+          setTimeout(() => {
+            outerThis.set('indicatorMessage', '');
+            outerThis.set('indicatorErrorMessage', '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }, 5000);
+        });
     },
     runPlaybook: function (playbookId, incidentIndex, incidentId) {
       const outerThis = this;
@@ -87,6 +173,7 @@ polarity.export = PolarityComponent.extend({
         action: 'runPlaybook',
         data: {
           entityValue: this.block.entity.value,
+          summary: this.get('summary'),
           incidentId,
           playbookId,
           submissionDetails: this.get('submissionDetails'),
@@ -141,6 +228,10 @@ polarity.export = PolarityComponent.extend({
 
   setIncident(newIncident) {
     this.set(`incidents`, [newIncident]);
+  },
+
+  setIndicator(newIndicator) {
+    this.set(`indicators`, [newIndicator]);
   },
 
   setErrorMessage(incidentIndex, msg) {

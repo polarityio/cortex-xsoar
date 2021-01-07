@@ -51,7 +51,7 @@ const handleError = (error) =>
   )(error);
 
 const checkForInternalDemistoError = (response) => {
-  const { error, detail } = response;
+  const { error, detail } = response || {};
   if (error) {
     const internalDemistoError = Error('Internal Demisto Query Error');
     internalDemistoError.status = 'internalDemistoError';

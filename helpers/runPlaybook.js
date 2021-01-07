@@ -4,7 +4,15 @@ const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (
-  { incidentId, playbookId, entityValue, submissionDetails, severity, selectedType },
+  {
+    incidentId,
+    playbookId,
+    entityValue,
+    summary,
+    submissionDetails,
+    severity,
+    selectedType
+  },
   options,
   requestWithDefaults,
   callback,
@@ -22,6 +30,7 @@ const runPlaybook = async (
         )
       : await _createContainerAndRunPlaybook(
           entityValue,
+          summary,
           playbookId,
           submissionDetails,
           severity,
@@ -62,6 +71,7 @@ const runPlaybook = async (
     }
 
     Logger.error(
+      error,
       {
         errors: [error],
         type: typeof error
@@ -118,6 +128,7 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaul
 
 const _createContainerAndRunPlaybook = async (
   entityValue,
+  summary,
   playbookId,
   submissionDetails,
   severity,
@@ -152,7 +163,7 @@ const _createContainerAndRunPlaybook = async (
     return {
       pbHistory: formattedPlaybookHistory,
       newIncident,
-      newSummary: createSummary([newIncident])
+      newSummary: createSummary([newIncident], [], summary)
     };
   } catch (error) {
     Logger.error(error, 'Incident Creation or Playbook Run Error');

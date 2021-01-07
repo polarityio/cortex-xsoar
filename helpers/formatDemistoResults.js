@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const {
   RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-  HUMAN_READABLE_SEVERITY_LEVELS
+  HUMAN_READABLE_SEVERITY_LEVELS,
 } = require('./constants');
 
 const { getKeys } = require('./dataTransformations');
@@ -14,8 +14,7 @@ const formatDemistoResults = (
   indicators,
   options,
   Logger
-) =>
-  fp.flatMap(
+) => fp.flatMap(
     ({ entities, playbooks }) =>
       fp.map((entity) => {
         const incidentsForThisEntity = getIncidentsForThisEntity(
@@ -35,7 +34,8 @@ const formatDemistoResults = (
               incidentsForThisEntity,
               indicatorsForThisEntity,
               playbooks,
-              options
+              options,
+              Logger
             )
           : indicatorsForThisEntity.length || allowIncidentCreation
           ? _formatNoIncidentFoundResults(
@@ -49,7 +49,6 @@ const formatDemistoResults = (
       }, entities),
     entityGroupsWithPlaybooks
   );
-
 const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
   fp.filter(
     ({ name, labels }) =>
@@ -70,7 +69,7 @@ const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
 
 const getIndicatorsForThisEntity = (indicators, entity) =>
   fp.filter(
-    ({ value, labels }) => fp.toLower(value) === fp.toLower(entity.value),
+    ({ value }) => fp.toLower(value) === fp.toLower(entity.value),
     indicators
   );
 
@@ -79,7 +78,8 @@ const _formatFoundIncidentResults = (
   incidentsForThisEntity,
   indicatorsForThisEntity,
   playbooks,
-  options
+  options,
+  Logger
 ) => ({
   entity,
   data: {
@@ -108,6 +108,9 @@ const _formatNoIncidentFoundResults = (
   data: {
     summary: [
       'No Incident Found',
+      ...(indicatorsForThisEntity.length
+        ? createSummary([], indicatorsForThisEntity)
+        : ['No Indicators Found'])
     ],
     details: {
       playbooks,
@@ -121,26 +124,48 @@ const _formatNoIncidentFoundResults = (
 
 const formatIncidentDate = ({ created, ...incident }) => ({
   ...incident,
-  created: moment(created).format('MMM D YY, h:mm A')
+  created: moment(created, 'MMM D YY, h:mm A')
 });
 
 const formatIndicatorDates = fp.map(
   ({ firstSeen, lastSeen, ...indicatorForThisEntity }) => ({
     ...indicatorForThisEntity,
-    firstSeen: moment(firstSeen).format('MMM D YY, h:mm A'),
-    lastSeen: moment(lastSeen).format('MMM D YY, h:mm A')
+    firstSeen: moment(firstSeen, 'MMM D YY, h:mm A'),
+    lastSeen: moment(lastSeen, 'MMM D YY, h:mm A')
   })
 );
 
-const createSummary = (results, indicators) => {
-  const severity = Math.max(results.map(({ severity }) => severity)) || 'Unknown';
+const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previousSummary = [], Logger) => {
+  const severity = fp.flow(
+    fp.map(fp.get('severity')),
+    fp.max,
+    fp.defaultTo('Unknown')
+  )(incidentsForThisEntity);
+  
+  const score =
+    fp.flow(
+      fp.map(fp.get('score')),
+      fp.max,
+      fp.defaultTo(0)
+    )(indicatorsForThisEntity);
+  
+  const indicatorDates = fp.flow(
+    fp.maxBy('score'),
+    fp.thru(
+      (indicator) =>
+        indicator && [
+          ...(firstSeen ? [`First Seen: ${moment(firstSeen.indicator, 'MMM D YY')}`] : []),
+          ...(lastSeen ? [`Last Seen: ${moment(lastSeen.indicator, 'MMM D YY')}`] : [])
+        ]
+    )
+  )(indicatorsForThisEntity);
 
   const uniqFlatMap = (func) =>
     fp.flow(
-      fp.flatMap(func),
+      fp.flatMap(func), 
       fp.uniq,
       fp.filter((x) => !fp.isEmpty(x))
-    )(results);
+    )(incidentsForThisEntity);
 
   const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
@@ -149,9 +174,23 @@ const createSummary = (results, indicators) => {
     ...(severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
       ? [`Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`]
       : []),
+    ...(indicatorsForThisEntity.length
+      ? [
+          `Reputatation: ${
+            score === 1
+              ? 'Good'
+              : score === 2
+              ? 'Suspicious'
+              : score === 3
+              ? 'Bad'
+              : 'None'
+          }`
+        ]
+      : []),
+    ...indicatorDates
   ];
 
-  return summary;
+  return fp.flow(fp.concat(previousSummary), fp.uniq, fp.compact)(summary);
 };
 
 module.exports = {

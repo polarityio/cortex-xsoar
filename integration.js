@@ -5,8 +5,10 @@ const createRequestWithDefaults = require('./helpers/createRequestWithDefaults')
 
 const { handleError } = require('./helpers/handleError');
 const { getLookupResults } = require('./helpers/getLookupResults');
+const createIndicator = require('./helpers/createIndicator');
 const runPlaybook = require('./helpers/runPlaybook');
-const searchTypes = require('./helpers/searchTypes');
+const searchIndicatorTypes = require('./helpers/searchIndicatorTypes');
+const searchIncidentTypes = require('./helpers/searchIncidentTypes');
 
 let Logger;
 let requestWithDefaults;
@@ -31,7 +33,12 @@ const doLookup = async (entities, { url, ..._options }, cb) => {
   cb(null, lookupResults);
 };
 
-const onMessageFunctions = { runPlaybook, searchTypes };
+const onMessageFunctions = {
+  runPlaybook,
+  createIndicator,
+  searchIndicatorTypes,
+  searchIncidentTypes
+};
 
 const onMessage = async (
   { action, data: actionParams },
