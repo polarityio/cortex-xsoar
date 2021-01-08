@@ -22,7 +22,7 @@ const PLAYBOOK_SEARCH_TERMS = {
 };
 
 const HUMAN_READABLE_SEVERITY_LEVELS = {
-  "Unknown": 'Unknown',
+  "0": 'Unknown',
   "0.5": 'Informational',
   "1": 'Low',
   "2": 'Medium',

@@ -57,14 +57,14 @@ const formatPlaybookRunHistory = ({
     .thru((playbookRuns) =>
       (playbookRuns || []).concat({
         name: currentPlaybookName,
-        date: moment(currentPlaybookStartDate, 'MMM D YY, h:mm A'),
+        date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
         status: currentPlaybookStatus
       })
     )
     .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
     .map(({ startDate, ...playbookRun }) => ({
       ...playbookRun,
-      date: moment(startDate, 'MMM D YY, h:mm A')
+      date: moment(startDate).format('MMM D YY, h:mm A')
     }))
     .value();
 

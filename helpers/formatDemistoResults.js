@@ -43,7 +43,8 @@ const formatDemistoResults = (
               indicatorsForThisEntity,
               playbooks,
               allowIncidentCreation,
-              options
+              options,
+              Logger
             )
           : { entity, data: null };
       }, entities),
@@ -83,7 +84,7 @@ const _formatFoundIncidentResults = (
 ) => ({
   entity,
   data: {
-    summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity),
+    summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity, [], Logger),
     details: {
       playbooks,
       incidents: getKeys(
@@ -101,7 +102,8 @@ const _formatNoIncidentFoundResults = (
   indicatorsForThisEntity,
   playbooks,
   allowIncidentCreation,
-  options
+  options,
+  Logger
 ) => ({
   entity,
   isVolatile: true,
@@ -109,7 +111,7 @@ const _formatNoIncidentFoundResults = (
     summary: [
       'No Incident Found',
       ...(indicatorsForThisEntity.length
-        ? createSummary([], indicatorsForThisEntity)
+        ? createSummary([], indicatorsForThisEntity,[],Logger)
         : ['No Indicators Found'])
     ],
     details: {
@@ -124,14 +126,14 @@ const _formatNoIncidentFoundResults = (
 
 const formatIncidentDate = ({ created, ...incident }) => ({
   ...incident,
-  created: moment(created, 'MMM D YY, h:mm A')
+  created: moment(created).format('MMM D YY, h:mm A')
 });
 
 const formatIndicatorDates = fp.map(
   ({ firstSeen, lastSeen, ...indicatorForThisEntity }) => ({
     ...indicatorForThisEntity,
-    firstSeen: moment(firstSeen, 'MMM D YY, h:mm A'),
-    lastSeen: moment(lastSeen, 'MMM D YY, h:mm A')
+    ...(firstSeen && { firstSeen: moment(firstSeen).format('MMM D YY, h:mm A') }),
+    ...(lastSeen && { lastSeen: moment(lastSeen).format('MMM D YY, h:mm A') })
   })
 );
 
@@ -139,9 +141,9 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
   const severity = fp.flow(
     fp.map(fp.get('severity')),
     fp.max,
-    fp.defaultTo('Unknown')
+    fp.defaultTo(0)
   )(incidentsForThisEntity);
-  
+
   const score =
     fp.flow(
       fp.map(fp.get('score')),
@@ -151,12 +153,17 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
   
   const indicatorDates = fp.flow(
     fp.maxBy('score'),
-    fp.thru(
-      (indicator) =>
-        indicator && [
-          ...(firstSeen ? [`First Seen: ${moment(firstSeen.indicator, 'MMM D YY')}`] : []),
-          ...(lastSeen ? [`Last Seen: ${moment(lastSeen.indicator, 'MMM D YY')}`] : [])
-        ]
+    fp.thru((indicator) =>
+      indicator
+        ? [
+            ...(indicator.firstSeen
+              ? [`First Seen: ${moment(indicator.firstSeen).format('MMM D YY')}`]
+              : []),
+            ...(indicator.lastSeen
+              ? [`Last Seen: ${moment(indicator.lastSeen).format('MMM D YY')}`]
+              : [])
+          ]
+        : []
     )
   )(indicatorsForThisEntity);
 
@@ -171,7 +178,9 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
 
   const summary = [
     ...types,
-    ...(severity && HUMAN_READABLE_SEVERITY_LEVELS[severity]
+    ...(incidentsForThisEntity.length &&
+    (severity || severity === 0) &&
+    HUMAN_READABLE_SEVERITY_LEVELS[severity]
       ? [`Severity: ${HUMAN_READABLE_SEVERITY_LEVELS[severity]}`]
       : []),
     ...(indicatorsForThisEntity.length

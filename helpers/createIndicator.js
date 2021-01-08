@@ -35,8 +35,8 @@ const createIndicator = async (
     const newIndicator = fp.thru(
       ({ firstSeen, lastSeen, ...indicator }) => ({
         ...indicator,
-        firstSeen: moment(firstSeen, 'MMM D YY, h:mm A'),
-        lastSeen: moment(lastSeen, 'MMM D YY, h:mm A')
+        firstSeen: moment(firstSeen).format('MMM D YY, h:mm A'),
+        lastSeen: moment(lastSeen).format('MMM D YY, h:mm A')
       }),
       newlyCreatedIndicator
     );
