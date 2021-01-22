@@ -5,6 +5,7 @@ const { IGNORED_IPS } = require('./constants');
 const { _partitionFlatMap } = require('./dataTransformations');
 const getPlaybooksByEntityGroup = require('./getPlaybooksByEntityGroup');
 const queryIncidents = require('./queryIncidents');
+const queryIndicators = require('./queryIndicators');
 const {
   getPlaybookRunHistoryForIncidents
 } = require('./getPlaybookRunHistoryForIncidents');
@@ -20,28 +21,37 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
       const entityGroupsWithPlaybooks = await getPlaybooksByEntityGroup(
         entitiesPartition,
         options,
-        Logger,
-        requestWithDefaults
+        requestWithDefaults,
+        Logger
       );
 
       const incidents = await queryIncidents(
-        options,
         entitiesPartition,
-        Logger,
-        requestWithDefaults
+        options,
+        requestWithDefaults,
+        Logger
       );
 
       const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
         incidents,
         options,
-        Logger,
-        requestWithDefaults
+        requestWithDefaults,
+        Logger
+      );
+
+      const indicators = await queryIndicators(
+        entitiesPartition,
+        options,
+        requestWithDefaults,
+        Logger
       );
 
       const lookupResults = formatDemistoResults(
         entityGroupsWithPlaybooks,
         incidentsWithPlaybookRunHistory,
-        options
+        indicators,
+        options,
+        Logger
       );
 
       return lookupResults.concat(ignoredIpLookupResults);

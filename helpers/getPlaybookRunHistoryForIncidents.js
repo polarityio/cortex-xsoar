@@ -2,13 +2,12 @@ const _ = require('lodash');
 const moment = require('moment');
 
 const { _P } = require('./dataTransformations');
-const { checkForInternalDemistoError } = require('./handleError');
 
 const getPlaybookRunHistoryForIncidents = (
   incidents,
   options,
-  Logger,
-  requestWithDefaults
+  requestWithDefaults,
+  Logger
 ) =>
   _P.map(incidents, async (incident) => {
     const playbookRunHistory = await getPlaybookRunHistory(
@@ -40,7 +39,6 @@ const getPlaybookRunHistory = async (
       'Content-type': 'application/json'
     }
   })
-    .then(checkForInternalDemistoError)
     .catch((error) => {
       Logger.error({ error }, 'Incident Query Error');
       throw error;

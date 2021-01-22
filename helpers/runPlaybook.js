@@ -1,15 +1,23 @@
 const { createSummary } = require('./formatDemistoResults');
-
-const { checkForInternalDemistoError } = require('./handleError');
+const fp = require('lodash/fp');
 const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 
 const runPlaybook = async (
-  Logger,
-  requestWithDefaults,
-  { data: { incidentId, playbookId, entityValue } },
+  {
+    incidentId,
+    playbookId,
+    entityValue,
+    summary,
+    submissionDetails,
+    severity,
+    selectedType
+  },
   options,
-  callback
+  requestWithDefaults,
+  callback,
+  Logger,
+  tryAgain = true
 ) => {
   try {
     const playbookRunResult = incidentId
@@ -22,7 +30,11 @@ const runPlaybook = async (
         )
       : await _createContainerAndRunPlaybook(
           entityValue,
+          summary,
           playbookId,
+          submissionDetails,
+          severity,
+          selectedType,
           options,
           Logger,
           requestWithDefaults
@@ -30,8 +42,50 @@ const runPlaybook = async (
 
     callback(null, playbookRunResult);
   } catch (error) {
-    Logger.error({ error }, 'Playbook Run Failed');
-    callback({ err: 'Failed to Run Playbook', detail: error });
+    if (
+      tryAgain &&
+      error.status === 403 &&
+      (fp.getOr('', 'description', error).includes('Could not find investigations') ||
+        fp
+          .getOr('', 'description.error', error)
+          .includes('Could not find investigations') ||
+        fp
+          .getOr('', 'description.detail', error)
+          .includes('Could not find investigations'))
+    ) {
+      return runPlaybook(
+        {
+          incidentId,
+          playbookId,
+          entityValue,
+          submissionDetails,
+          severity,
+          selectedType
+        },
+        options,
+        requestWithDefaults,
+        callback,
+        Logger,
+        false
+      );
+    }
+
+    Logger.error(
+      error,
+      {
+        errors: [error],
+        type: typeof error
+      },
+      'Playbook Run Failed'
+    );
+    callback({
+      errors: [
+        {
+          detail: error.description,
+          ...error
+        }
+      ]
+    });
   }
 };
 
@@ -66,31 +120,35 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaul
       authorization: options.apiKey,
       'Content-type': 'application/json'
     },
-    data: {}
   })
-    .then(checkForInternalDemistoError)
     .catch((error) => {
       Logger.error({ error }, 'Playbook Run Error');
-      return { error };
+      throw error;
     });
 
 const _createContainerAndRunPlaybook = async (
   entityValue,
+  summary,
   playbookId,
+  submissionDetails,
+  severity,
+  selectedType,
   options,
   Logger,
   requestWithDefaults
 ) => {
-  let newIncident;
   try {
     const { body: newlyCreatedIncident } = await _createIncidentAndRunPlaybook(
       entityValue,
       playbookId,
+      submissionDetails,
+      severity,
+      selectedType,
       options,
       requestWithDefaults
     );
 
-    newIncident = formatIncidentDate(newlyCreatedIncident);
+    const newIncident = formatIncidentDate(newlyCreatedIncident);
 
     await _startInvestigation(newIncident, options, requestWithDefaults);
 
@@ -105,17 +163,20 @@ const _createContainerAndRunPlaybook = async (
     return {
       pbHistory: formattedPlaybookHistory,
       newIncident,
-      newSummary: createSummary([newIncident])
+      newSummary: createSummary([newIncident], [], summary)
     };
   } catch (error) {
-    Logger.error({ error }, 'Incident Creation or Playbook Run Error');
-    throw error
+    Logger.error(error, 'Incident Creation or Playbook Run Error');
+    throw error;
   }
 };
 
 const _createIncidentAndRunPlaybook = (
   entityValue,
   playbookId,
+  submissionDetails,
+  severity,
+  selectedType,
   options,
   requestWithDefaults
 ) =>
@@ -128,17 +189,18 @@ const _createIncidentAndRunPlaybook = (
     },
     body: {
       name: entityValue,
-      playbookId,
-      severity: 3,
+      ...(playbookId && { playbookId }),
+      ...(selectedType && { type: selectedType.id }),
+      severity: fp.toNumber(severity),
       labels: [
         {
           type: 'Origin',
           value: 'Polarity'
         }
       ],
-      details: 'This is an Incident uploaded from Polarity'
+      ...(submissionDetails && { details: submissionDetails })
     }
-  }).then(checkForInternalDemistoError);
+  });
 
 const _startInvestigation = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
@@ -152,7 +214,7 @@ const _startInvestigation = (newIncident, options, requestWithDefaults) =>
       id: newIncident.id,
       version: 1
     }
-  }).then(checkForInternalDemistoError);
+  });
 
 const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
@@ -162,6 +224,6 @@ const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
       authorization: options.apiKey,
       'Content-type': 'application/json'
     }
-  }).then(checkForInternalDemistoError);
+  });
 
 module.exports = runPlaybook;

@@ -1,13 +1,12 @@
-const fs = require("fs");
-const request = require("request");
-const { promisify } = require("util");
+const fs = require('fs');
+const request = require('request');
 
-const config = require("../config/config");
+const config = require('../config/config');
+const { checkForInternalDemistoError } = require('./handleError');
 
-const _configFieldIsValid = (field) =>
-  typeof field === "string" && field.length > 0;
+const _configFieldIsValid = (field) => typeof field === 'string' && field.length > 0;
 
-const createRequestWithDefaults = () => {
+const createRequestWithDefaults = (Logger) => {
   const {
     request: { ca, cert, key, passphrase, rejectUnauthorized, proxy }
   } = config;
@@ -18,45 +17,57 @@ const createRequestWithDefaults = () => {
     ...(_configFieldIsValid(key) && { key: fs.readFileSync(key) }),
     ...(_configFieldIsValid(passphrase) && { passphrase }),
     ...(_configFieldIsValid(proxy) && { proxy }),
-    ...(typeof rejectUnauthorized === "boolean" && { rejectUnauthorized }),
+    ...(typeof rejectUnauthorized === 'boolean' && { rejectUnauthorized }),
     json: true
   };
 
   const requestWithDefaults = (
-    preRequestFunction = () => ({}),
-    postRequestSuccessFunction = (x) => x,
-    postRequestFailureFunction = (e) => { throw e; }
-  ) => async ({ json: bodyWillBeJSON, ...requestOptions }) => {
-    const _requestWithDefault = promisify(request.defaults(defaults));
-    const preRequestFunctionResults = await preRequestFunction(requestOptions);
-    const _requestOptions = {
-      ...requestOptions,
-      ...preRequestFunctionResults,
-    };
-
-    let postRequestFunctionResults;
-    try {
-      const { body, ...result } = await _requestWithDefault(_requestOptions);
-
-      checkForError({ body, ...result });
-
-      postRequestFunctionResults = await postRequestSuccessFunction({
-        ...result,
-        body: bodyWillBeJSON ? JSON.parse(body) : body,
-      });
-    } catch (error) {
-      postRequestFunctionResults = await postRequestFailureFunction(
-        error,
-        _requestOptions
-      );
+    preRequestFunction = async () => ({}),
+    postRequestSuccessFunction = async (x) => x,
+    postRequestFailureFunction = async (e) => {
+      throw e;
     }
+  ) => {
+    const defaultsRequest = request.defaults(defaults);
 
-    return postRequestFunctionResults;
+    const _requestWithDefault = (requestOptions) =>
+      new Promise((resolve, reject) => {
+        defaultsRequest(requestOptions, (err, res, body) => {
+          if (err) return reject(err);
+          resolve({ ...res, body });
+        });
+      });
+
+    return async (requestOptions) => {
+      const preRequestFunctionResults = await preRequestFunction(requestOptions);
+      const _requestOptions = {
+        ...requestOptions,
+        ...preRequestFunctionResults
+      };
+
+      let postRequestFunctionResults;
+      try {
+        const result = await _requestWithDefault(_requestOptions);
+        checkForStatusError(result, _requestOptions);
+
+        postRequestFunctionResults = await postRequestSuccessFunction(result);
+      } catch (error) {
+        postRequestFunctionResults = await postRequestFailureFunction(
+          error,
+          _requestOptions
+        );
+      }
+      return postRequestFunctionResults;
+    };
   };
 
-  const checkForError = ({ statusCode, body }, requestOptions) => {
-    if (Math.round(statusCode / 100) * 100 !== 200) {
-      const requestError = Error("Request Error");
+  const checkForStatusError = ({ statusCode, body }, requestOptions) => {
+    Logger.trace({ statusCode, body, requestOptions });
+    
+    checkForInternalDemistoError(body);
+    const roundedStatus = Math.round(statusCode / 100) * 100;
+    if (![200].includes(roundedStatus)) {
+      const requestError = Error('Request Error');
       requestError.status = statusCode;
       requestError.description = body;
       requestError.requestOptions = requestOptions;

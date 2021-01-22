@@ -1,13 +1,12 @@
 const { PLAYBOOK_SEARCH_TERMS } = require('./constants');
-const { checkForInternalDemistoError } = require('./handleError');
-
+const fp = require('lodash/fp');
 const { _P } = require('./dataTransformations');
 
 const getPlaybooksByEntityGroup = (
   entitiesPartition,
   options,
-  Logger,
-  requestWithDefaults
+  requestWithDefaults,
+  Logger
 ) =>
   _P
     .chain(entitiesPartition)
@@ -36,7 +35,6 @@ const _getPlaybooksForEntityType = (options, Logger, requestWithDefaults) => asy
       query: PLAYBOOK_SEARCH_TERMS[keyEntityType]
     }
   })
-    .then(checkForInternalDemistoError)
     .catch((error) => {
       Logger.error({ error }, 'Incident Query Error');
       throw error;
@@ -46,7 +44,7 @@ const _getPlaybooksForEntityType = (options, Logger, requestWithDefaults) => asy
     ...agg,
     [keyEntityType]: {
       entities: valueEntities,
-      playbooks
+      playbooks: fp.filter((playbook) => !playbook.hidden, playbooks)
     }
   };
 };
