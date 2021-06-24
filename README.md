@@ -55,7 +55,7 @@ If checked, users will be able create incidents when searching On Demand if ther
 
 ## Troubleshooting
 
-### Bad API Key
+### Invalid API Key
 
 If you see the following error it typically means the API key is invalid:
 
