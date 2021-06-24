@@ -39,7 +39,9 @@ The Server URL where the Cortex XSOAR API instance is located.  The Server URL s
 
 ### Token
 
-The API token to use to authenticate with the Cortex XSOAR server.  See the official documentation for instructions on setting up an API token.
+The API token to use to authenticate with the Cortex XSOAR server.  See the official documentation for instructions on setting up an API token. 
+
+> If you are running a multi-tenant deployment, the API key must be generated specifically for the tenant you wish to search. 
 
 ### Allow Incident Creation
 
@@ -50,6 +52,26 @@ If checked, users will be able create incidents when searching On Demand if ther
 > There are some current limitations to the integration in relation to the query and creation of Incidicents and Indicators due to some issues with Cortex XSOAR's API.  Currently we are finding that Indicator searches are not exhaustive meaning there could be other indicators in Cortex XSOAR that we are not finding. This is not happening often but is possible.
 
 > Also, when we are creating an Incident using the dashboard we are setting the name of the incident to the Entity's Value and setting a label to Polarity for later reference that the incident was created in Polarity.  We are also running a playbook that you select on the Incident after it is created.
+
+## Troubleshooting
+
+### Invalid API Key
+
+If you see the following error it typically means the API key is invalid:
+
+```json
+{
+  "id":"forbidden",
+  "status":403,
+  "title":"Forbidden",
+  "detail":"Issue with CSRF code",
+  "error":"http: named cookie not present",
+  "encrypted":false,
+  "multires":null
+}
+```
+
+Also ensure the API key is generated for the tenet you wish to search if you have a multi-tenet deployment.
 
 ## Installation Instructions
 
