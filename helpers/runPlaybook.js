@@ -1,7 +1,7 @@
 const { createSummary } = require('./formatDemistoResults');
-const fp = require('lodash/fp');
 const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
+const { getOr, toNumber } = require('lodash/fp');
 
 const runPlaybook = async (
   {
@@ -42,16 +42,14 @@ const runPlaybook = async (
 
     callback(null, playbookRunResult);
   } catch (error) {
+    const err = JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+
     if (
       tryAgain &&
-      error.status === 403 &&
-      (fp.getOr('', 'description', error).includes('Could not find investigations') ||
-        fp
-          .getOr('', 'description.error', error)
-          .includes('Could not find investigations') ||
-        fp
-          .getOr('', 'description.detail', error)
-          .includes('Could not find investigations'))
+      err.status === 403 &&
+      (getOr('', 'description', err).includes('Could not find investigations') ||
+        getOr('', 'description.error', err).includes('Could not find investigations') ||
+        getOr('', 'description.detail', err).includes('Could not find investigations'))
     ) {
       return runPlaybook(
         {
@@ -71,18 +69,32 @@ const runPlaybook = async (
     }
 
     Logger.error(
-      error,
       {
-        errors: [error],
-        type: typeof error
+        detail: 'Failed to Run Playbook',
+        options,
+        formattedError: err
       },
-      'Playbook Run Failed'
+      'Running Playbook Failed'
     );
-    callback({
+
+    const { title, detail, code } = getOr(
+      {
+        title: error.message,
+        detail: 'Running Playbook was Unsuccessful',
+        code: error.status
+      },
+      'errors.0',
+      err.description && err.description[0] === '{'
+        ? JSON.parse(err.description)
+        : err.description
+    );
+    return callback({
       errors: [
         {
-          detail: error.description,
-          ...error
+          err: error,
+          detail: `${title}${detail ? ` - ${detail}` : ''}${
+            code ? `, Code: ${code}` : ''
+          }`
         }
       ]
     });
@@ -191,7 +203,7 @@ const _createIncidentAndRunPlaybook = (
       name: entityValue,
       ...(playbookId && { playbookId }),
       ...(selectedType && { type: selectedType.id }),
-      severity: fp.toNumber(severity),
+      severity: toNumber(severity),
       labels: [
         {
           type: 'Origin',
