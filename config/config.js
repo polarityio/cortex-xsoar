@@ -26,8 +26,7 @@ module.exports = {
     key: '',
     passphrase: '',
     ca: '',
-    proxy: '',
-    rejectUnauthorized: false
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
