@@ -1,9 +1,12 @@
 const fp = require('lodash/fp');
 const moment = require('moment');
+const {
+  helpers: { filterObjectsContainingString }
+} = require('polarity-integration-utils');
 
 const {
   RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-  HUMAN_READABLE_SEVERITY_LEVELS,
+  HUMAN_READABLE_SEVERITY_LEVELS
 } = require('./constants');
 
 const { getKeys } = require('./dataTransformations');
@@ -14,17 +17,20 @@ const formatDemistoResults = (
   indicators,
   options,
   Logger
-) => fp.flatMap(
+) =>
+  fp.flatMap(
     ({ entities, playbooks }) =>
       fp.map((entity) => {
+        const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
+
         const incidentsForThisEntity = getIncidentsForThisEntity(
           incidentsWithPlaybookRunHistory,
+          indicatorsForThisEntity,
           entity
         );
 
-        const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
-
         const allowIncidentCreation =
+          entity.requestContext &&
           entity.requestContext.requestType === 'OnDemand' &&
           options.allowIncidentCreation;
 
@@ -50,29 +56,48 @@ const formatDemistoResults = (
       }, entities),
     entityGroupsWithPlaybooks
   );
-const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
-  fp.filter(
-    ({ name, labels }) =>
-      fp.flow(
-        fp.toLower,
-        fp.includes(fp.flow(fp.getOr('', 'value'), fp.toLower)(entity))
-      )(name) ||
-      fp.some(
-        fp.flow(
-          fp.getOr('', 'value'),
-          fp.toLower,
-          fp.includes(fp.flow(fp.getOr('', 'value'), fp.toLower)(entity))
-        ),
-        labels
-      ),
-    incidentsWithPlaybookRunHistory
-  );
+const getIncidentsForThisEntity = (
+  incidentsWithPlaybookRunHistory,
+  indicatorsForThisEntity,
+  entity
+) => {
+  const indicatorInvestigationIDs = fp.flow(
+    fp.flatMap(fp.get('investigationIDs')),
+    fp.uniq
+  )(indicatorsForThisEntity);
+
+  const lowerCaseEntityValue = fp.flow(fp.get('value'), fp.toLower)(entity);
+
+  const indicatorRelatedIncidents = fp.filter((incident) => {
+    const incidentIsIncludedInIndicators = indicatorInvestigationIDs.includes(
+      incident.id
+    );
+
+    const entityIsInIncident = fp.size(
+      filterObjectsContainingString(lowerCaseEntityValue, [incident])
+    );
+
+    return incidentIsIncludedInIndicators || entityIsInIncident;
+  }, incidentsWithPlaybookRunHistory);
+
+  return indicatorRelatedIncidents;
+};
 
 const getIndicatorsForThisEntity = (indicators, entity) =>
-  fp.filter(
-    ({ value }) => fp.toLower(value) === fp.toLower(entity.value),
-    indicators
-  );
+  fp.filter(({ value, comments }) => {
+    const lowerCaseEntityValue = fp.flow(fp.get('value'), fp.toLower)(entity);
+
+    const entityIsInIndicatorValue = fp.includes(fp.toLower(value), lowerCaseEntityValue);
+
+    const entityIsIncludedInIndicatorComments = fp.flow(
+      fp.map('content'),
+      fp.join(''),
+      fp.toLower,
+      fp.includes(lowerCaseEntityValue)
+    )(comments);
+
+    return entityIsInIndicatorValue || entityIsIncludedInIndicatorComments;
+  }, indicators);
 
 const _formatFoundIncidentResults = (
   entity,
@@ -87,10 +112,7 @@ const _formatFoundIncidentResults = (
     summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity, [], Logger),
     details: {
       playbooks,
-      incidents: getKeys(
-        RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-        incidentsForThisEntity
-      ).map(formatIncidentDate),
+      incidents: fp.map(formatIncidentDate, incidentsForThisEntity),
       indicators: formatIndicatorDates(indicatorsForThisEntity),
       baseUrl: `${options.url}/#`
     }
@@ -111,7 +133,7 @@ const _formatNoIncidentFoundResults = (
     summary: [
       'No Incident Found',
       ...(indicatorsForThisEntity.length
-        ? createSummary([], indicatorsForThisEntity,[],Logger)
+        ? createSummary([], indicatorsForThisEntity, [], Logger)
         : ['No Indicators Found'])
     ],
     details: {
@@ -124,9 +146,9 @@ const _formatNoIncidentFoundResults = (
   }
 });
 
-const formatIncidentDate = ({ created, ...incident }) => ({
+const formatIncidentDate = (incident) => ({
   ...incident,
-  created: moment(created).format('MMM D YY, h:mm A')
+  created: moment(incident.created).format('MMM D YY, h:mm A')
 });
 
 const formatIndicatorDates = fp.map(
@@ -137,20 +159,24 @@ const formatIndicatorDates = fp.map(
   })
 );
 
-const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previousSummary = [], Logger) => {
+const createSummary = (
+  incidentsForThisEntity,
+  indicatorsForThisEntity,
+  previousSummary = [],
+  Logger
+) => {
   const severity = fp.flow(
     fp.map(fp.get('severity')),
     fp.max,
     fp.defaultTo(0)
   )(incidentsForThisEntity);
 
-  const score =
-    fp.flow(
-      fp.map(fp.get('score')),
-      fp.max,
-      fp.defaultTo(0)
-    )(indicatorsForThisEntity);
-  
+  const score = fp.flow(
+    fp.map(fp.get('score')),
+    fp.max,
+    fp.defaultTo(0)
+  )(indicatorsForThisEntity);
+
   const indicatorDates = fp.flow(
     fp.maxBy('score'),
     fp.thru((indicator) =>
@@ -169,7 +195,7 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
 
   const uniqFlatMap = (func) =>
     fp.flow(
-      fp.flatMap(func), 
+      fp.flatMap(func),
       fp.uniq,
       fp.filter((x) => !fp.isEmpty(x))
     )(incidentsForThisEntity);

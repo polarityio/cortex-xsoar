@@ -23,7 +23,12 @@ const doLookup = async (entities, options, cb) => {
 
   let lookupResults;
   try {
-    lookupResults = await getLookupResults(entities, options, requestWithDefaults, Logger);
+    lookupResults = await getLookupResults(
+      entities,
+      options,
+      requestWithDefaults,
+      Logger
+    );
   } catch (error) {
     Logger.error({ error }, 'Get Lookup Results Failed');
     return cb(handleError(error));
@@ -40,7 +45,11 @@ const onMessageFunctions = {
   searchIncidentTypes
 };
 
-const onMessage = async ({ action, data: actionParams }, { url, ..._options }, callback) =>
+const onMessage = async (
+  { action, data: actionParams },
+  { url, ..._options },
+  callback
+) =>
   onMessageFunctions[action](
     actionParams,
     { ..._options, url: url.endsWith('/') ? url.slice(0, -1) : url },
@@ -48,7 +57,6 @@ const onMessage = async ({ action, data: actionParams }, { url, ..._options }, c
     callback,
     Logger
   );
-
 
 module.exports = {
   doLookup,

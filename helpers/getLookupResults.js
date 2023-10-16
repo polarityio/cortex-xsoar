@@ -1,11 +1,12 @@
 const _ = require('lodash');
-
+const fp = require('lodash/fp');
 const { IGNORED_IPS } = require('./constants');
 
 const { _partitionFlatMap } = require('./dataTransformations');
 const getPlaybooksByEntityGroup = require('./getPlaybooksByEntityGroup');
 const queryIncidents = require('./queryIncidents');
 const queryIndicators = require('./queryIndicators');
+const queryIncidentsByIndicator = require('./queryIncidentsByIndicator');
 const {
   getPlaybookRunHistoryForIncidents
 } = require('./getPlaybookRunHistoryForIncidents');
@@ -14,11 +15,17 @@ const { formatDemistoResults } = require('./formatDemistoResults');
 const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
   _partitionFlatMap(
     async (_entitiesPartition) => {
-      const { entitiesPartition, ignoredIpLookupResults } = _splitOutIgnoredIps(
-        _entitiesPartition
-      );
+      const { entitiesPartition, ignoredIpLookupResults } =
+        _splitOutIgnoredIps(_entitiesPartition);
 
       const entityGroupsWithPlaybooks = await getPlaybooksByEntityGroup(
+        entitiesPartition,
+        options,
+        requestWithDefaults,
+        Logger
+      );
+
+      const indicators = await queryIndicators(
         entitiesPartition,
         options,
         requestWithDefaults,
@@ -32,15 +39,15 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
         Logger
       );
 
-      const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
-        incidents,
+      const incidentsForThisIndicator = await queryIncidentsByIndicator(
+        indicators,
         options,
         requestWithDefaults,
         Logger
       );
 
-      const indicators = await queryIndicators(
-        entitiesPartition,
+      const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
+        incidents.concat(incidentsForThisIndicator),
         options,
         requestWithDefaults,
         Logger
@@ -49,7 +56,7 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
       const lookupResults = formatDemistoResults(
         entityGroupsWithPlaybooks,
         incidentsWithPlaybookRunHistory,
-        indicators,
+        indicators.concat(incidentsForThisIndicator),
         options,
         Logger
       );

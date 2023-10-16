@@ -1,4 +1,5 @@
 const fp = require('lodash/fp');
+const Aigle = require('aigle');
 
 const queryIncidents = async (
   entitiesPartition,
@@ -7,27 +8,33 @@ const queryIncidents = async (
   Logger
 ) => {
   const entityValues = fp.map(fp.get('value'), entitiesPartition);
-  const {
-    body: { data: incidents }
-  } = await requestWithDefaults({
-    url: `${options.url}/incidents/search`,
-    method: 'POST',
-    headers: {
-      authorization: options.apiKey,
-      'Content-type': 'application/json'
-    },
-    body: {
-      filter: {
-        name: entityValues,
-        labels: entityValues
-      }
-    }
-  }).catch((error) => {
-    Logger.error({ error }, 'Incident Query Error');
-    throw error;
-  });
 
-  return incidents;
+  const incidentRequests = fp.flow(
+    fp.uniq,
+    fp.map(
+      (entityValue) => async () =>
+        fp.get(
+          'body.data',
+          await requestWithDefaults({
+            method: 'POST',
+            url: `${options.url}/incidents/search`,
+            headers: {
+              authorization: options.apiKey,
+              'Content-type': 'application/json'
+            },
+            body: {
+              filter: {
+                query: entityValue
+              }
+            }
+          })
+        )
+    )
+  )(entityValues);
+
+  const incidents = fp.flatten(await Aigle.parallelLimit(incidentRequests, 10));
+
+  return incidents || [];
 };
 
 module.exports = queryIncidents;
