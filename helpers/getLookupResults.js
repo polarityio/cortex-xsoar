@@ -56,7 +56,7 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
       const lookupResults = formatDemistoResults(
         entityGroupsWithPlaybooks,
         incidentsWithPlaybookRunHistory,
-        indicators.concat(incidentsForThisIndicator),
+        indicators,
         options,
         Logger
       );
