@@ -7,9 +7,6 @@ const queryIndicators = async (
   requestWithDefaults,
   Logger
 ) => {
-  //Check if the entity is an IP, Hash, Domain, Email, assemble using OR
-  // If allText, search all text fields
-
   const query = fp.flow(fp.map(handleCustomTypes), fp.join(' OR '))(entitiesPartition);
 
   const {
