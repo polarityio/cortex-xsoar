@@ -4,12 +4,7 @@ const {
   helpers: { filterObjectsContainingString }
 } = require('polarity-integration-utils');
 
-const {
-  RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-  HUMAN_READABLE_SEVERITY_LEVELS
-} = require('./constants');
-
-const { getKeys } = require('./dataTransformations');
+const { HUMAN_READABLE_SEVERITY_LEVELS } = require('./constants');
 
 const formatDemistoResults = (
   entityGroupsWithPlaybooks,

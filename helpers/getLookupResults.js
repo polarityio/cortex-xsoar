@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const fp = require('lodash/fp');
 const { IGNORED_IPS } = require('./constants');
 
 const { _partitionFlatMap } = require('./dataTransformations');
