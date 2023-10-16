@@ -31,7 +31,7 @@ const queryIndicators = async (
 };
 
 const handleCustomTypes = (entity) => {
-  if (entity.types.length === 1 && entity.types[0] === 'custom.allText') {
+  if (entity.types && entity.types.length === 1 && entity.types[0] === 'custom.allText') {
     return fp.flow(
       fp.map((field) => `${field}:${entity.value}`),
       fp.join(' OR ')
