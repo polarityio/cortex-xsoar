@@ -30,7 +30,7 @@ module.exports = {
     rejectUnauthorized: false
   },
   logging: {
-    level: 'trace' //trace, debug, info, warn, error, fatal
+    level: 'info' //trace, debug, info, warn, error, fatal
   },
   options: [
     {
