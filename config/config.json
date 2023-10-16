@@ -3,16 +3,14 @@
   "name": "Cortex XSOAR",
   "acronym": "CX",
   "description": "Cortex XSOAR provides automation and security orchestration capabilities.",
-  "entityTypes": [
-    "IPv4",
-    "IPv6",
-    "hash",
-    "domain",
-    "email"
+  "entityTypes": ["IPv4", "IPv6", "hash", "domain", "email"],
+  "customTypes": [
+    {
+      "key": "allText",
+      "regex": "\\S[\\s\\S]{2,50}\\S"
+    }
   ],
-  "styles": [
-    "./styles/styles.less"
-  ],
+  "styles": ["./styles/styles.less"],
   "onDemandOnly": true,
   "defaultColor": "light-purple",
   "block": {
@@ -28,7 +26,8 @@
     "key": "",
     "passphrase": "",
     "ca": "",
-    "proxy": ""
+    "proxy": "",
+    "rejectUnauthorized": false
   },
   "logging": {
     "level": "info"

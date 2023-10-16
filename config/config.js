@@ -1,8 +1,15 @@
 module.exports = {
   name: 'Cortex XSOAR',
   acronym: 'CX',
-  description: 'Cortex XSOAR provides automation and security orchestration capabilities.',
+  description:
+    'Cortex XSOAR provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
+  customTypes: [
+    {
+      key: 'allText',
+      regex: /\S[\s\S]{2,50}\S/
+    }
+  ],
   styles: ['./styles/styles.less'],
   onDemandOnly: true,
   defaultColor: 'light-purple',
@@ -19,10 +26,11 @@ module.exports = {
     key: '',
     passphrase: '',
     ca: '',
-    proxy: ""
+    proxy: '',
+    rejectUnauthorized: false
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   options: [
     {
@@ -38,7 +46,8 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
+      description:
+        'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
       userCanEdit: true,
@@ -47,7 +56,8 @@ module.exports = {
     {
       key: 'allowIndicatorCreation',
       name: 'Allow Indicator Creation',
-      description: 'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity.',
+      description:
+        'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity.',
       default: false,
       type: 'boolean',
       userCanEdit: true,
@@ -56,7 +66,8 @@ module.exports = {
     {
       key: 'allowIncidentCreation',
       name: 'Allow Incident Creation',
-      description: 'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity.',
+      description:
+        'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity.',
       default: false,
       type: 'boolean',
       userCanEdit: true,
