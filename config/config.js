@@ -55,21 +55,19 @@ module.exports = {
     {
       key: 'allowIndicatorCreation',
       name: 'Allow Indicator Creation',
-      description:
-        'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity.',
+      description: 'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     },
     {
       key: 'allowIncidentCreation',
       name: 'Allow Incident Creation',
-      description:
-        'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity.',
+      description: 'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
-      userCanEdit: true,
+      userCanEdit: false,
       adminOnly: false
     }
   ]
