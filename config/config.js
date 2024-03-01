@@ -1,8 +1,31 @@
 module.exports = {
   name: 'Cortex XSOAR',
   acronym: 'CX',
-  description: 'Cortex XSOAR provides automation and security orchestration capabilities.',
+  description:
+    'Cortex XSOAR provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
+  customTypes: [
+    {
+      key: 'SSOID',
+      regex: /\b[\d]{9}\b/
+    },
+    {
+      key: 'hostname',
+      regex: /\b(desktop-)[A-z,\d]{7}\b/
+    },
+    {
+      key: 'hostname2',
+      regex: /\b[A-z,0-9]{13}[\d]{2}\b/
+    },
+    {
+      key: 'HPA',
+      regex: /\b[hH][pP][aA]-[a-zA-Z0-9]{1,20}\b/
+    },
+    {
+      key: 'SCTASK',
+      regex: /\b[sS][cC][tT][aA][sS][kK][0-9]{6,8}\b/
+    }
+  ],
   styles: ['./styles/styles.less'],
   onDemandOnly: true,
   defaultColor: 'light-purple',
@@ -19,10 +42,10 @@ module.exports = {
     key: '',
     passphrase: '',
     ca: '',
-    proxy: ""
+    proxy: ''
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   options: [
     {
@@ -38,7 +61,8 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
+      description:
+        'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
       userCanEdit: true,
@@ -47,7 +71,8 @@ module.exports = {
     {
       key: 'allowIndicatorCreation',
       name: 'Allow Indicator Creation',
-      description: 'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+      description:
+        'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -56,7 +81,8 @@ module.exports = {
     {
       key: 'allowIncidentCreation',
       name: 'Allow Incident Creation',
-      description: 'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+      description:
+        'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
       userCanEdit: false,

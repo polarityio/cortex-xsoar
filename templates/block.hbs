@@ -1,544 +1,692 @@
-{{#if (and allowIndicatorCreation (not indicators.length))}}
-  {{#if (get expandableTitleStates 0)}}
+<ul class="nav nav-tabs mt-2">
+  <li class="nav-item">
     <a
-      href="#"
-      class="expandable-title none"
-      {{on "click" (action "toggleExpandableTitle" 0)}}
-    >
-      <span class="text none"><span class="desc">Value:</span> {{entityValue}} (new)</span> {{fa-icon "angle-up"}}
+      {{action "changeTopTab" "indicators"}}
+            class="nav-link  {{if (or (eq state.activeTab "indicators")(not state.activeTab)) "active"}}"
+            href="#">
+      Indicators ({{indicators.length}})
     </a>
-    <div>
-      <span class="p-key">Status:</span>
-      <span class="p-value">Polarity did not find this entity as an Indicator in Cortex XSOAR</span>
-    </div>
-    <div class="view-in-ts create-in-phantom">
-      <a class="p-link" href="{{baseUrl}}/indicators">Create Indicator in Cortex XSOAR Dashboard
-        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-    </div>
-
-    <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Indicator</h1>
-
-    <div class="select-container">
-      <span class="p-value">Indicator Type: </span>
-      {{#power-select
-        options=foundIndicatorTypes
-        selected=selectedIndicatorType
-        searchEnabled=true
-        searchField="info"
-        placeholder="Select Indicator Types..."
-        triggerClass="form-control"
-        search=(action "searchIndicatorTypes")
-        searchMessage="Loading Indicator Types ..."
-        loadingMessage="Loading Indicator Types ..."
-        searchPlaceholder="Search Indicator Types"
-        closeOnSelect=true
-        onOpen=(action "searchIndicatorTypes" "")
-        onChange=(action (mut selectedIndicatorType)) as |type|}}
-        <span>{{type.details}}</span>
-      {{/power-select}}
-    </div>
-    
-    <div class="select-container pt-1">
-      <span class="p-value">Reputation: </span>
-      <select class="w-100" onchange={{action (mut reputation) value="target.value"}}>
-        <option style="color: #9aa0a3; font-weight: 600" value="0">
-          {{fa-icon "burn" fixedWidth=true}} None
-        </option>
-        <option style="color: #00CD33; font-weight: 600" value="1">
-          {{fa-icon "bomb" fixedWidth=true}} Good
-        </option>
-        <option style="color: #FF9000; font-weight: 600" value="2">
-          {{fa-icon "bullhorn" fixedWidth=true}} Suspicious
-        </option>
-        <option style="color: #ff1644; font-weight: 600" value="3">
-          {{fa-icon "bullhorn" fixedWidth=true}} Bad
-        </option>
-      </select>
-    </div>
-    
-    <div class="select-container last">
-      <span class="p-value">Add a Comment: </span>
-      <input
-        type="text"
-        class="w-100"
-        placeholder="Polarity Indicator Comment"
-        onchange={{action (mut indicatorComment) value="target.value"}}
-        value={{indicatorComment}}
-      />
-    </div>
-    
-    <div class="d-flex flex-row justify-content-between align-items-center">
-      <div>
-        {{#if isIndicatorRunning}}
-          {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
-        {{/if}}
-      </div>
-      <button
-        {{action "createIndicator"}}
-        class="p-btn btn btn-light mt-1"class="p-btn btn btn-light mt-1"
-        disabled={{isRunning}}
-      >
-        Create Indicator
-      </button>
-    </div>
-    {{#if indicatorMessage}}
-      <div class="alert alert-info mt-1">
-        {{indicatorMessage}}
-      </div>
-    {{/if}}
-    {{#if indicatorErrorMessage}}
-      <div class="alert alert-danger mt-1">
-        {{indicatorErrorMessage}}
-      </div>
-    {{/if}}
-  {{else}}
+  </li>
+  <li class="nav-item">
     <a
-      href="#"
-      class="expandable-title none"
-      {{on "click" (action "toggleExpandableTitle" 0)}}
-    >
-      <span class="text none">{{entityValue}} (new)</span> {{fa-icon "angle-down"}}
-    </a>
-  {{/if}}
-  {{#if (or allowIncidentCreation incidents.length)}}
-    <hr>
-  {{/if}}
-{{else}}
-  {{#if indicators.length}}
-    <div class="p-title">
-      {{fa-icon "map-signs" fixedWidth=true}} Indicators
-    </div>
-    {{#each indicators as |indicator indicatorIndex|}}
-      {{#if (get expandableTitleStates indicatorIndex)}}
-        {{#if (eq indicator.score 1)}}
-          <a
+      {{action "changeTopTab" "incidents"}}
+            class="nav-link {{if (eq state.activeTab "incidents") "active"}}"
             href="#"
-            class="expandable-title good"
-            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-          >
-            <span class="text good"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
-          </a>
-        {{else}}
-          {{#if (eq indicator.score 2)}}
-            <a
-              href="#"
-              class="expandable-title suspicious"
-              {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-            >
-              <span class="text suspicious"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
-            </a>
-          {{else}}
-            {{#if (eq indicator.score 3)}}
-              <a
-                href="#"
-                class="expandable-title bad"
-                {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-              >
-                <span class="text bad"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
-              </a>
-            {{else}}
-              <a
+    >
+      Incidents ({{incidents.length}})
+    </a>
+  </li>
+  <li class="nav-item">
+    <a
+      {{action "changeTopTab" "write"}}
+            class="nav-link {{if (eq state.activeTab "write") "active"}}"
+            href="#"
+    >
+      {{fa-icon icon="plus-circle" fixedWidth=true class="tab-icon"}} Evidence
+    </a>
+  </li>
+</ul>
+
+
+{{#if (eq state.activeTab "indicators")}}
+  <div class="mt-2">
+    {{#if (and allowIndicatorCreation (not indicators.length))}}
+      {{#if (get expandableTitleStates 0)}}
+        <a
                 href="#"
                 class="expandable-title none"
-                {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-              >
-                <span class="text none"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon "angle-up"}}
-              </a>
-            {{/if}}
-          {{/if}}
-        {{/if}}
-        
-        {{#if indicator.indicator_type}}
+          {{on "click" (action "toggleExpandableTitle" 0)}}
+        >
+          <span class="text none"><span class="desc">Value:</span> {{entityValue}} (new)</span> {{fa-icon "angle-up"}}
+        </a>
+        <div>
+          <span class="p-key">Status:</span>
+          <span class="p-value">Polarity did not find this entity as an Indicator in Cortex XSOAR</span>
+        </div>
+        <div class="view-in-ts create-in-phantom">
+          <a class="p-link" href="{{baseUrl}}/indicators">Create Indicator in Cortex XSOAR Dashboard
+            {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+        </div>
+
+        <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Indicator</h1>
+
+        <div class="select-container">
+          <span class="p-value">Indicator Type: </span>
+          {{#power-select
+                  options=foundIndicatorTypes
+                  selected=selectedIndicatorType
+                  searchEnabled=true
+                  searchField="info"
+                  placeholder="Select Indicator Types..."
+                  triggerClass="form-control"
+                  search=(action "searchIndicatorTypes")
+                  searchMessage="Loading Indicator Types ..."
+                  loadingMessage="Loading Indicator Types ..."
+                  searchPlaceholder="Search Indicator Types"
+                  closeOnSelect=true
+                  onOpen=(action "searchIndicatorTypes" "")
+                  onChange=(action (mut selectedIndicatorType)) as |type|}}
+            <span>{{type.details}}</span>
+          {{/power-select}}
+        </div>
+
+        <div class="select-container pt-1">
+          <span class="p-value">Reputation: </span>
+          <select class="w-100" onchange={{action (mut reputation) value="target.value"}}>
+            <option style="color: #9aa0a3; font-weight: 600" value="0">
+              {{fa-icon "burn" fixedWidth=true}} None
+            </option>
+            <option style="color: #00CD33; font-weight: 600" value="1">
+              {{fa-icon "bomb" fixedWidth=true}} Good
+            </option>
+            <option style="color: #FF9000; font-weight: 600" value="2">
+              {{fa-icon "bullhorn" fixedWidth=true}} Suspicious
+            </option>
+            <option style="color: #ff1644; font-weight: 600" value="3">
+              {{fa-icon "bullhorn" fixedWidth=true}} Bad
+            </option>
+          </select>
+        </div>
+
+        <div class="select-container last">
+          <span class="p-value">Add a Comment: </span>
+          <input
+                  type="text"
+                  class="w-100"
+                  placeholder="Polarity Indicator Comment"
+                  onchange={{action (mut indicatorComment) value="target.value"}}
+                  value={{indicatorComment}}
+          />
+        </div>
+
+        <div class="d-flex flex-row justify-content-between align-items-center">
           <div>
-            <span class="p-key">Type:</span>
-            <span class="p-value">{{indicator.indicator_type}}</span>
+            {{#if isIndicatorRunning}}
+              {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+            {{/if}}
+          </div>
+          <button
+            {{action "createIndicator"}}
+                  class="p-btn btn btn-light mt-1" class="p-btn btn btn-light mt-1"
+                  disabled={{isRunning}}
+          >
+            Create Indicator
+          </button>
+        </div>
+        {{#if indicatorMessage}}
+          <div class="alert alert-info mt-1">
+            {{indicatorMessage}}
           </div>
         {{/if}}
-        <div>
-          <span class="p-key">Reputation:</span>
-          <span class="p-value"><em>
+        {{#if indicatorErrorMessage}}
+          <div class="alert alert-danger mt-1">
+            {{indicatorErrorMessage}}
+          </div>
+        {{/if}}
+      {{else}}
+        <a
+                href="#"
+                class="expandable-title none"
+          {{on "click" (action "toggleExpandableTitle" 0)}}
+        >
+          <span class="text none">{{entityValue}} (new)</span> {{fa-icon "angle-down"}}
+        </a>
+      {{/if}}
+    {{else}}
+      {{#if indicators.length}}
+        {{#each indicators as |indicator indicatorIndex|}}
+          {{#if (get expandableTitleStates indicatorIndex)}}
             {{#if (eq indicator.score 1)}}
-              <span style="color: #00CD33; font-weight: 600">Good</span>
+              <a
+                      href="#"
+                      class="expandable-title good"
+                {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+              >
+                <span class="text good"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                      "angle-up"}}
+              </a>
             {{else}}
               {{#if (eq indicator.score 2)}}
-                <span style="color: #FF9000; font-weight: 600">Suspicious</span>
+                <a
+                        href="#"
+                        class="expandable-title suspicious"
+                  {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                >
+                  <span class="text suspicious"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                        "angle-up"}}
+                </a>
               {{else}}
                 {{#if (eq indicator.score 3)}}
-                  <span style="color: #ff1644; font-weight: 600">Bad</span>
+                  <a
+                          href="#"
+                          class="expandable-title bad"
+                    {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                  >
+                    <span class="text bad"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                          "angle-up"}}
+                  </a>
                 {{else}}
-                  <span style="color: #9aa0a3; font-weight: 600">None</span>
+                  <a
+                          href="#"
+                          class="expandable-title none"
+                    {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                  >
+                    <span class="text none"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                          "angle-up"}}
+                  </a>
                 {{/if}}
               {{/if}}
             {{/if}}
-          </em></span>
-        </div>
-        {{!-- <div>
-          <span class="p-key">Related Incidents:</span>
-          <span class="p-value">{{if indicator.relatedIncCount indicator.relatedIncCount "0"}}</span>
-        </div> --}}
-        {{#if indicator.firstSeen}}
-          <div>
-            <span class="p-key">First Seen:</span>
-            <span class="p-value">{{indicator.firstSeen}}</span>
-          </div>
-        {{/if}}
-        {{#if indicator.lastSeen}}
-          <div>
-            <span class="p-key">Last Seen:</span>
-            <span class="p-value">{{indicator.lastSeen}}</span>
-          </div>
-        {{/if}}
-        <div class="work-plan-link">
-          <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
-            Show in Cortex XSOAR
-            {{fa-icon "external-link-square" class="external-link-icon"}}
-          </a>
-        </div>
-      {{else}}
-        {{#if (eq indicator.score 1)}}
-          <a
-            href="#"
-            class="expandable-title good"
-            {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-          >
-            <span class="text good">{{indicator.value}}</span> {{fa-icon "angle-down"}}
-          </a>
-        {{else}}
-          {{#if (eq indicator.score 2)}}
-            <a
-              href="#"
-              class="expandable-title suspicious"
-              {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-            >
-              <span class="text suspicious">{{indicator.value}}</span> {{fa-icon "angle-down"}}
-            </a>
+
+            {{#if indicator.indicator_type}}
+              <div>
+                <span class="p-key">Type:</span>
+                <span class="p-value">{{indicator.indicator_type}}</span>
+              </div>
+            {{/if}}
+            <div>
+              <span class="p-key">Reputation:</span>
+              <span class="p-value"><em>
+                {{#if (eq indicator.score 1)}}
+                  <span style="color: #00CD33; font-weight: 600">Good</span>
+                {{else}}
+                  {{#if (eq indicator.score 2)}}
+                    <span style="color: #FF9000; font-weight: 600">Suspicious</span>
+                  {{else}}
+                    {{#if (eq indicator.score 3)}}
+                      <span style="color: #ff1644; font-weight: 600">Bad</span>
+                    {{else}}
+                      <span style="color: #9aa0a3; font-weight: 600">None</span>
+                    {{/if}}
+                  {{/if}}
+                {{/if}}
+              </em></span>
+            </div>
+            {{!-- <div>
+              <span class="p-key">Related Incidents:</span>
+              <span class="p-value">{{if indicator.relatedIncCount indicator.relatedIncCount "0"}}</span>
+            </div> --}}
+            {{#if indicator.firstSeen}}
+              <div>
+                <span class="p-key">First Seen:</span>
+                <span class="p-value">{{indicator.firstSeen}}</span>
+              </div>
+            {{/if}}
+            {{#if indicator.lastSeen}}
+              <div>
+                <span class="p-key">Last Seen:</span>
+                <span class="p-value">{{indicator.lastSeen}}</span>
+              </div>
+            {{/if}}
+            <div class="work-plan-link">
+              <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
+                Show in Cortex XSOAR
+                {{fa-icon "external-link-square" class="external-link-icon"}}
+              </a>
+            </div>
           {{else}}
-            {{#if (eq indicator.score 3)}}
+            {{#if (eq indicator.score 1)}}
               <a
-                href="#"
-                class="expandable-title bad"
+                      href="#"
+                      class="expandable-title good"
                 {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
               >
-                <span class="text bad">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                <span class="text good">{{indicator.value}}</span> {{fa-icon "angle-down"}}
               </a>
             {{else}}
-              <a
-                href="#"
-                class="expandable-title none"
-                {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
-              >
-                <span class="text none">{{indicator.value}}</span> {{fa-icon "angle-down"}}
-              </a>
+              {{#if (eq indicator.score 2)}}
+                <a
+                        href="#"
+                        class="expandable-title suspicious"
+                  {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                >
+                  <span class="text suspicious">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                </a>
+              {{else}}
+                {{#if (eq indicator.score 3)}}
+                  <a
+                          href="#"
+                          class="expandable-title bad"
+                    {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                  >
+                    <span class="text bad">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                  </a>
+                {{else}}
+                  <a
+                          href="#"
+                          class="expandable-title none"
+                    {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
+                  >
+                    <span class="text none">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                  </a>
+                {{/if}}
+              {{/if}}
             {{/if}}
           {{/if}}
-        {{/if}}
+        {{/each}}
       {{/if}}
-    {{/each}}
-    {{#if (or allowIncidentCreation incidents.length)}}
-      <hr>
     {{/if}}
-  {{/if}}
+  </div>
 {{/if}}
 
-{{#if (and allowIncidentCreation (not incidents.length))}}
-  <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Incident Info</h1>
-  <div>
-    <span class="p-key">Name: </span>
-    <span class="p-value">{{entityValue}}</span>
-  </div>
-  <p>
-    Status: <b>Polarity did not find this entity as an Incident in Cortex XSOAR</b>
-  </p>
-  <div class="view-in-ts create-in-phantom">
-    <a class="p-link" href="{{baseUrl}}/incidents">Create Incident in Cortex XSOAR Dashboard
-      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-  </div>
-
-  <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Incident and Run Playbook</h1>
-
-  <div class="select-container">
-    <span class="p-value">Details: </span>
-    <input
-      type="text"
-      class="w-100"
-      placeholder="Polarity Upload Details"
-      onchange={{action (mut submissionDetails) value="target.value"}}
-      value={{submissionDetails}}
-    />
-  </div>
-
-  <div class="select-container">
-    <span class="p-value">Type: </span>
-    {{#power-select
-      options=foundIncidentTypes
-      selected=selectedIncidentType
-      searchEnabled=true
-      searchField="info"
-      placeholder="Select Incident Types..."
-      triggerClass="form-control"
-      search=(action "searchIncidentTypes")
-      searchMessage="Loading Incident Types ..."
-      loadingMessage="Loading Incident Types ..."
-      searchPlaceholder="Search Incident Types"
-      closeOnSelect=true
-      onOpen=(action "searchIncidentTypes" "")
-      onChange=(action (mut selectedIncidentType)) as |type|}}
-      <span>{{type.name}}</span>
-    {{/power-select}}
-  </div>
-
-  <div class="select-container pt-1">
-    <span class="p-value">Severity: </span>
-    <select class="w-100" onchange={{action (mut severity) value="target.value"}}>
-      <option style="color: #9AA0A3; font-weight: 600" value="0">
-        {{fa-icon "bomb" fixedWidth=true}} Unknown
-      </option>
-      <option style="color: #3497FE; font-weight: 600" value="0.5">
-        {{fa-icon "bullhorn" fixedWidth=true}} Informational
-      </option>
-      <option style="color: #00CD33; font-weight: 600" value="1">
-        {{fa-icon "burn" fixedWidth=true}} Low
-      </option>
-      <option style="color: #FF9000; font-weight: 600" value="2">
-        {{fa-icon "fire" fixedWidth=true}} Medium
-      </option>
-      <option style="color: rgba(255, 23, 68, 0.7); font-weight: 600" value="3">
-        {{fa-icon "fire-alt" fixedWidth=true}} High
-      </option>
-      <option style="color: #D0021C; font-weight: 600" value="4">
-        {{fa-icon "exclamation" fixedWidth=true}} Critical
-      </option>
-    </select>
-  </div>
-
-  <select class="w-100" size=5 onchange={{action (mut newIncidentPlaybookId) value="target.value"}}>
-    {{#each playbooks as |playbook|}}
-      <option value="{{playbook.id}}">{{playbook.name}}</option>
-    {{/each}}
-  </select>
-  <div class="d-flex flex-row justify-content-between align-items-center">
-    <div>
-      {{#if isRunning}}
-        {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
-      {{/if}}
-    </div>
-    <button
-      {{action "runPlaybook" newIncidentPlaybookId}}
-      class="p-btn btn btn-light mt-1"class="p-btn btn btn-light mt-1"
-      disabled={{isRunning}}
-    >
-      Create & Run
-    </button>
-  </div>
-  {{#if incidentMessage}}
-    <div class="alert alert-info mt-1">
-      {{incidentMessage}}
-    </div>
-  {{/if}}
-  {{#if incidentErrorMessage}}
-    <div class="alert alert-danger mt-1">
-      {{incidentErrorMessage}}
-    </div>
-  {{/if}}
-{{else}}
-  {{#if incidents.length}}
-    <div class="p-title">
-      {{fa-icon "bomb" fixedWidth=true}} Incidents
-    </div>
-  {{/if}}
-  {{#each incidents as |incident incidentIndex|}}
-    {{#if (gt incidentIndex 0)}}
-      <hr>
-    {{/if}}
-    <div class="incident-name">
-      <span class="p-key">Name:</span>
-      <span class="p-value">{{incident.name}}</span>
-    </div>
-    <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Cortex XSOAR
-      {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-
-    <ul class="nav nav-tabs mt-2">
-      <li class="nav-item">
-        <a {{action "changeTab" incidentIndex "incident"}}
-                class="nav-link  {{if (or (eq incident.__activeTab "incident")(not incident.__activeTab)) "active"}}"
-                href="#">Incident</a>
-      </li>
-      <li class="nav-item">
-        <a
-          {{action "changeTab" incidentIndex "history"}}
-          class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
-          href="#"
-        >
-          Playbook History ({{incident.pbHistory.length}})
-        </a>
-      </li>
-    </ul>
-
-    {{#if (or (eq incident.__activeTab "incident") (not incident.__activeTab))}}
-      <div class="p-title">
-        {{fa-icon "info" fixedWidth=true}} Details
-      </div>
-      {{#if incident.name}}
-        <div>
-          <span class="p-key">Name:</span>
-          <span class="p-value">{{incident.name}}</span>
-        </div>
-      {{/if}}
-      {{#if incident.type}}
-        <div>
-          <span class="p-key">Type:</span>
-          <span class="p-value">{{incident.type}}</span>
-        </div>
-      {{/if}}
-      {{#if incident.category}}
-        <div>
-          <span class="p-key">Category:</span>
-          <span class="p-value">{{incident.category}}</span>
-        </div>
-      {{/if}}
-
+{{#if (eq state.activeTab "incidents")}}
+  <div class="mt-2">
+    {{#if (and allowIncidentCreation (not incidents.length))}}
       <div>
-        <span class="p-key">Severity:</span>
-        <span class="p-value">
-          {{#unless incident.severity}}
-            <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
-          {{/unless}}
-          {{#if (eq incident.severity 0.5)}}
-            <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
-          {{/if}}
-          {{#if (eq incident.severity 1)}}
-            <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
-          {{/if}}
-          {{#if (eq incident.severity 2)}}
-            <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
-          {{/if}}
-          {{#if (eq incident.severity 3)}}
-            <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
-          {{/if}}
-          {{#if (eq incident.severity 4)}}
-            <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
-          {{/if}}
-        </span>
+        <span class="p-key">Name: </span>
+        <span class="p-value">{{entityValue}}</span>
+      </div>
+      <p>
+        Status: <b>Polarity did not find this entity as an Incident in Cortex XSOAR</b>
+      </p>
+      <div class="view-in-ts create-in-phantom">
+        <a class="p-link" href="{{baseUrl}}/incidents">Create Incident in Cortex XSOAR Dashboard
+          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
       </div>
 
-      {{#if incident.reason}}
-        <div>
-          <span class="p-key">Reason:</span>
-          <span class="p-value">{{incident.reason}}</span>
-        </div>
-      {{/if}}
-      {{#if incident.details}}
-        <div>
-          <span class="p-key">Details:</span>
-          <span class="p-value">{{incident.details}}</span>
-        </div>
-      {{/if}}
+      <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Incident and Run Playbook</h1>
 
-      
-      {{#if incident.created}}
-        <div>
-          <span class="p-key">Date Created:</span>
-          <span class="p-value">{{incident.created}}</span>
-        </div>
-      {{/if}}
-      {{#if incident.owner}}
-        <div>
-          <span class="p-key">Owner:</span>
-          <span class="p-value">{{incident.owner}}</span>
-        </div>
-      {{/if}}
-      {{#if (not indicators.length)}}
-        <div>
-          <span class="p-key">Indicators Found:</span>
-          <span class="p-value"><em>None</em></span>
-        </div>
-      {{/if}}
+      <div class="select-container">
+        <span class="p-value">Details: </span>
+        <input
+                type="text"
+                class="w-100"
+                placeholder="Polarity Upload Details"
+                onchange={{action (mut submissionDetails) value="target.value"}}
+                value={{submissionDetails}}
+        />
+      </div>
 
-      {{#if (and incident.labels incident.labels.length)}}
-        <div class="p-title">
-          {{fa-icon "tag" fixedWidth=true}} Labels
-        </div>
-        <div>
-          {{#each incident.labels as |label|}}
-            <div>
-              <span class="p-key">{{label.type}}:</span>
-              <span class="p-value">{{label.value}}</span>
-            </div>
-          {{/each}}
-        </div>
-      {{/if}}
+      <div class="select-container">
+        <span class="p-value">Type: </span>
+        {{#power-select
+                options=foundIncidentTypes
+                selected=selectedIncidentType
+                searchEnabled=true
+                searchField="info"
+                placeholder="Select Incident Types..."
+                triggerClass="form-control"
+                search=(action "searchIncidentTypes")
+                searchMessage="Loading Incident Types ..."
+                loadingMessage="Loading Incident Types ..."
+                searchPlaceholder="Search Incident Types"
+                closeOnSelect=true
+                onOpen=(action "searchIncidentTypes" "")
+                onChange=(action (mut selectedIncidentType)) as |type|}}
+          <span>{{type.name}}</span>
+        {{/power-select}}
+      </div>
 
-      <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
-      <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
+      <div class="select-container pt-1">
+        <span class="p-value">Severity: </span>
+        <select class="w-100" onchange={{action (mut severity) value="target.value"}}>
+          <option style="color: #9AA0A3; font-weight: 600" value="0">
+            {{fa-icon "bomb" fixedWidth=true}} Unknown
+          </option>
+          <option style="color: #3497FE; font-weight: 600" value="0.5">
+            {{fa-icon "bullhorn" fixedWidth=true}} Informational
+          </option>
+          <option style="color: #00CD33; font-weight: 600" value="1">
+            {{fa-icon "burn" fixedWidth=true}} Low
+          </option>
+          <option style="color: #FF9000; font-weight: 600" value="2">
+            {{fa-icon "fire" fixedWidth=true}} Medium
+          </option>
+          <option style="color: rgba(255, 23, 68, 0.7); font-weight: 600" value="3">
+            {{fa-icon "fire-alt" fixedWidth=true}} High
+          </option>
+          <option style="color: #D0021C; font-weight: 600" value="4">
+            {{fa-icon "exclamation" fixedWidth=true}} Critical
+          </option>
+        </select>
+      </div>
+
+      <select class="w-100" size=5 onchange={{action (mut newIncidentPlaybookId) value="target.value"}}>
         {{#each playbooks as |playbook|}}
           <option value="{{playbook.id}}">{{playbook.name}}</option>
         {{/each}}
       </select>
       <div class="d-flex flex-row justify-content-between align-items-center">
         <div>
-          {{#if incident.__running}}
+          {{#if isRunning}}
             {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
           {{/if}}
         </div>
         <button
-          {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}}
-          class="p-btn btn btn-light mt-1"
-          disabled={{incident.__running}}
+          {{action "runPlaybook" newIncidentPlaybookId}}
+                class="p-btn btn btn-light mt-1" class="p-btn btn btn-light mt-1"
+                disabled={{isRunning}}
         >
-          Run Playbook
+          Create & Run
         </button>
       </div>
-      {{#if incident.__message}}
+      {{#if incidentMessage}}
         <div class="alert alert-info mt-1">
-          {{incident.__message}}
+          {{incidentMessage}}
         </div>
       {{/if}}
-      {{#if incident.__errorMessage}}
+      {{#if incidentErrorMessage}}
         <div class="alert alert-danger mt-1">
-          {{incident.__errorMessage}}
+          {{incidentErrorMessage}}
         </div>
       {{/if}}
-    {{/if}}
-
-    {{#if (eq incident.__activeTab "history")}}
-      <h1 class="p-title">
-        {{fa-icon "history" fixedWidth=true}}
-        Playbook Run History ({{incident.pbHistory.length}})
-      </h1>
-      <div class="wrap-incident">
-        {{#if incident.pbHistory.length}}
-          {{#each incident.pbHistory as |playbookRun|}}
-            <div class="playbook-container">
-              <span class="p-title">{{playbookRun.name}}</span>
-              {{#if playbookRun.status}}
-                <div class="playbook-run-date">
-                  <span class="p-key">Type:</span>
-                  <span class="p-value">Current Work Plan</span>
-                </div>
-                <div>
-                  <span class="p-key">Status:</span>
-                  <span class="p-value">{{capitalize playbookRun.status}}</span>
-                </div>
-                <div>
-                  <span class="p-key">Run Date:</span>
-                  <span class="p-value">{{playbookRun.date}}</span>
-                </div>
-                <div class="work-plan-link">
-                  <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
-                    {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-                </div>
-              {{else}}
-                <div class="playbook-run-date">
-                  <span class="p-key">Date:</span>
-                  <span class="p-value">{{playbookRun.date}}</span>
-                </div>
-              {{/if}}
-            </div>
-          {{/each}}
-        {{else}}
-          <span class="p-value">None</span>
+    {{else}}
+      {{#each incidents as |incident incidentIndex|}}
+        {{#if (gt incidentIndex 0)}}
+          <hr>
         {{/if}}
+        <div class="p-title">
+          {{fa-icon icon="siren-on" fixedWidth=true}} #{{incident.id}} {{incident.name}} - Incident Info
+        </div>
+        <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Cortex XSOAR
+          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+
+        <ul class="nav nav-tabs mt-2">
+          <li class="nav-item">
+            <a {{action "changeTab" incidentIndex "incident"}}
+                    class="nav-link  {{if (or (eq incident.__activeTab "incident")(not incident.__activeTab))"active"}}"
+                    href="#">Incident</a>
+          </li>
+          <li class="nav-item">
+            <a
+              {{action "changeTab" incidentIndex "history"}}
+                    class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
+                    href="#"
+            >
+              Playbook History ({{incident.pbHistory.length}})
+            </a>
+          </li>
+        </ul>
+
+        {{#if (or (eq incident.__activeTab "incident") (not incident.__activeTab))}}
+          <div class="p-title">
+            {{fa-icon "info" fixedWidth=true}} Details
+          </div>
+          {{#if incident.id}}
+            <div>
+              <span class="p-key">Id:</span>
+              <span class="p-value">#{{incident.id}}</span>
+            </div>
+          {{/if}}
+          {{#if incident.name}}
+            <div>
+              <span class="p-key">Name:</span>
+              <span class="p-value">{{incident.name}}</span>
+            </div>
+          {{/if}}
+          {{#if incident.type}}
+            <div>
+              <span class="p-key">Type:</span>
+              <span class="p-value">{{incident.type}}</span>
+            </div>
+          {{/if}}
+          {{#if incident.category}}
+            <div>
+              <span class="p-key">Category:</span>
+              <span class="p-value">{{incident.category}}</span>
+            </div>
+          {{/if}}
+
+          <div>
+            <span class="p-key">Severity:</span>
+            <span class="p-value">
+            {{#unless incident.severity}}
+              <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
+            {{/unless}}
+              {{#if (eq incident.severity 0.5)}}
+                <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
+              {{/if}}
+              {{#if (eq incident.severity 1)}}
+                <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
+              {{/if}}
+              {{#if (eq incident.severity 2)}}
+                <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
+              {{/if}}
+              {{#if (eq incident.severity 3)}}
+                <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
+              {{/if}}
+              {{#if (eq incident.severity 4)}}
+                <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
+              {{/if}}
+          </span>
+          </div>
+
+          {{#if incident.reason}}
+            <div>
+              <span class="p-key">Reason:</span>
+              <span class="p-value">{{incident.reason}}</span>
+            </div>
+          {{/if}}
+          {{#if incident.details}}
+            <div>
+              <span class="p-key">Details:</span>
+              <span class="p-value">{{incident.details}}</span>
+            </div>
+          {{/if}}
+
+
+          {{#if incident.created}}
+            <div>
+              <span class="p-key">Date Created:</span>
+              <span class="p-value">{{incident.created}}</span>
+            </div>
+          {{/if}}
+          {{#if incident.owner}}
+            <div>
+              <span class="p-key">Owner:</span>
+              <span class="p-value">{{incident.owner}}</span>
+            </div>
+          {{/if}}
+          {{#if (not indicators.length)}}
+            <div>
+              <span class="p-key">Indicators Found:</span>
+              <span class="p-value"><em>None</em></span>
+            </div>
+          {{/if}}
+
+          {{#if (and incident.labels incident.labels.length)}}
+            <div class="p-title">
+              {{fa-icon "tag" fixedWidth=true}} Labels
+            </div>
+            <div>
+              {{#each incident.labels as |label|}}
+                <div>
+                  <span class="p-key">{{label.type}}:</span>
+                  <span class="p-value">{{label.value}}</span>
+                </div>
+              {{/each}}
+            </div>
+          {{/if}}
+        {{/if}}
+
+        {{#if (eq incident.__activeTab "history")}}
+          <div class="p-action mb-1 mt-2" {{action (toggle "__showRunPlaybook" incident)}}>
+            Run a playbook
+            {{#if incident.__showRunPlaybook}}
+              {{fa-icon icon="chevron-up"}}
+            {{else}}
+              {{fa-icon icon="chevron-down"}}
+            {{/if}}
+          </div>
+          {{#if incident.__showRunPlaybook}}
+            <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
+            <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
+              {{#each playbooks as |playbook|}}
+                <option value="{{playbook.id}}">{{playbook.name}}</option>
+              {{/each}}
+            </select>
+            <div class="d-flex flex-row justify-content-between align-items-center">
+              <div>
+                {{#if incident.__running}}
+                  {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+                {{/if}}
+              </div>
+              <button
+                {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}}
+                      class="p-btn btn btn-light mt-1"
+                      disabled={{incident.__running}}
+              >
+                Run Playbook
+              </button>
+            </div>
+            {{#if incident.__message}}
+              <div class="alert alert-info mt-1">
+                {{incident.__message}}
+              </div>
+            {{/if}}
+            {{#if incident.__errorMessage}}
+              <div class="alert alert-danger mt-1">
+                {{incident.__errorMessage}}
+              </div>
+            {{/if}}
+          {{/if}}
+          <h1 class="p-title">
+            {{fa-icon "history" fixedWidth=true}}
+            Playbook Run History ({{incident.pbHistory.length}})
+          </h1>
+          <div class="wrap-incident">
+            {{#if incident.pbHistory.length}}
+              {{#each incident.pbHistory as |playbookRun|}}
+                <div class="playbook-container">
+                  <span class="p-title">{{playbookRun.name}}</span>
+                  {{#if playbookRun.status}}
+                    <div class="playbook-run-date">
+                      <span class="p-key">Type:</span>
+                      <span class="p-value">Current Work Plan</span>
+                    </div>
+                    <div>
+                      <span class="p-key">Status:</span>
+                      <span class="p-value">{{capitalize playbookRun.status}}</span>
+                    </div>
+                    <div>
+                      <span class="p-key">Run Date:</span>
+                      <span class="p-value">{{playbookRun.date}}</span>
+                    </div>
+                    <div class="work-plan-link">
+                      <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
+                        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                    </div>
+                  {{else}}
+                    <div class="playbook-run-date">
+                      <span class="p-key">Date:</span>
+                      <span class="p-value">{{playbookRun.date}}</span>
+                    </div>
+                  {{/if}}
+                </div>
+              {{/each}}
+            {{else}}
+              <span class="p-value">None</span>
+            {{/if}}
+          </div>
+        {{/if}}
+      {{/each}}
+    {{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq state.activeTab "write")}}
+  <div class="write-container">
+    <div class="mt-2">
+      Data from selected integrations will be submitted as JSON formatted evidence to the selected Incident.
+    </div>
+    <div class="mt-2 d-flex justify-content-between align-items-center">
+      <div class="p-action" {{action "toggleAllIntegrations"}}>
+        Toggle All Integrations
+      </div>
+      <div class="p-footnote">
+        {{numSelectedWriteIntegrations}} selected
+      </div>
+    </div>
+    <div
+      class="integration-labels-container mt-2 {{if state.missingIntegrations "error-text"}} {{if state.isWriting "disabled"}}"
+    >
+      {{#each state.integrations as | integration |}}
+        <label class="integration-write-label d-flex align-items-center">
+          <input
+                  disabled={{state.isWriting}}
+                  type="checkbox"
+                  checked={{integration.selected}}
+                  onclick={{action (mut integration.selected) value="target.checked"}}
+          >
+          <div class="label-text">
+            {{integration.integrationName}}
+          </div>
+        </label>
+      {{/each}}
+    </div>
+    <div class="integration-labels-description p-footnote {{if state.missingIntegrations "error-text"}}">
+      Select one or more integrations to use as Evidence
+    </div>
+    {{!--
+    <div class="mt-2">
+      <input
+        type="text"
+        {{on "input" (pick "target.value" (set this "state.xsoarIncidentId"))}}
+      >
+    </div>
+    --}}
+    <div class="input-container mt-2 {{if uiElement.error "error"}}">
+      <label class="small ifta-label">
+        Incident
+        <span class="required">*</span>
+      </label>
+      <select
+              class="ifta-field {{if state.missingIncidentId "error"}}"
+        {{on "change" (pick "target.value" (set this "state.xsoarIncidentId"))}}
+              required=true
+              disabled={{state.isWriting}}
+      >
+        <option disabled selected value=""> -- Select an Incident --</option>
+        {{#each details.incidents as | incident |}}
+          <option value="{{incident.id}}" selected={{if (eq incident.id state.xsoarIncidentId) true}}>
+            #{{incident.id}} {{incident.name}}
+          </option>
+        {{/each}}
+      </select>
+      {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
+    </div>
+    <div class="ui-description p-footnote {{if state.missingIncidentId "error"}}">
+      Select an incident to add evidence to.
+    </div>
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="submit-evidence-status-message {{if statusMessageIsVisible 'visible' 'hidden'}}">
+        {{#if (eq statusMessageType "error")}}
+          {{fa-icon icon="exclamation-triangle" fixedWidth=true class="submit-error-icon"}}
+        {{else}}
+          {{fa-icon icon="check" fixedWidth=true class="submit-success-icon"}}
+        {{/if}}
+        {{statusMessage}}
+      </div>
+      <button
+        {{action "writeIntegrationData"}}
+              class="p-btn btn btn-light"
+              disabled={{state.isWriting}}
+      >
+        {{#if state.isWriting}}
+          {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+        {{else}}
+          {{fa-icon icon="paper-plane" fixedWidth=true}}
+        {{/if}}
+        Add Evidence
+      </button>
+    </div>
+    {{#if state.writeErrorMessage}}
+      <div class="alert alert-danger mt-2 error-container">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="error-title">{{fa-icon icon="exclamation-triangle" fixedWidth=true}} An Error Occurred</div>
+          {{fa-icon icon="times" fixedWidth=true class="error-close"
+                    click=(action (set this "state.writeErrorMessage" ""))}}
+        </div>
+        <div class="error-item">{{state.writeErrorMessage}}</div>
       </div>
     {{/if}}
-  {{/each}}
+    {{#if state.success}}
+      <div class="mt-2">
+        <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.successIncidentId}}">
+          View Evidence for Incident #{{state.successIncidentId}}
+          {{fa-icon "external-link-square" class="external-link-icon"}}
+        </a>
+      </div>
+    {{/if}}
+  </div>
 {{/if}}
