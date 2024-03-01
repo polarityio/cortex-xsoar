@@ -169,6 +169,15 @@ polarity.export = PolarityComponent.extend({
         this.setIntegrationSelection();
       }
     },
+    refreshIntegrations: function() {
+      this.set('state.spinRefresh', true);
+      this.setIntegrationSelection();
+      setTimeout(() => {
+        if(!this.isDestroyed) {
+          this.set('state.spinRefresh', false);
+        }
+      }, 1000);
+    },
     searchIncidentTypes: function (term) {
       return new Ember.RSVP.Promise((resolve, reject) => {
         Ember.run.debounce(this, this.searchIncidentTypes, term, resolve, reject, 500);

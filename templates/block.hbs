@@ -593,8 +593,13 @@
       <div class="p-action" {{action "toggleAllIntegrations"}}>
         Toggle All Integrations
       </div>
-      <div class="p-footnote">
-        {{numSelectedWriteIntegrations}} selected
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="p-footnote">
+          {{numSelectedWriteIntegrations}} selected
+        </div>
+        <button class="btn ml-1 icon-btn p-action" {{action "refreshIntegrations"}} title="Refresh integrations">
+          {{fa-icon icon="sync" fixedWidth=true spin=state.spinRefresh}}
+        </button>
       </div>
     </div>
     <div
@@ -655,7 +660,7 @@
         {{else}}
           {{fa-icon icon="check" fixedWidth=true class="submit-success-icon"}}
         {{/if}}
-        {{statusMessage}}
+        {{state.statusMessage}}
       </div>
       <button
         {{action "writeIntegrationData"}}
