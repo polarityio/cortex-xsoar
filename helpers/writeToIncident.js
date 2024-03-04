@@ -58,8 +58,8 @@ async function writeToIncident(
     },
     (err) => {
       if (err) {
-        let parsedError = parseErrorToReadableJSON(requestError);
-        Logger.error({ parsedError, requestError }, 'Error when submitting evidence');
+        let parsedError = parseErrorToReadableJSON(err);
+        Logger.error({ parsedError, err }, 'Error when submitting evidence');
         callback(err);
       } else {
         callback(null, {

@@ -3,7 +3,8 @@
 @dark-green: #63a830;
 
 .external-link-icon {
-  font-size: 10px;
+  font-size: 8px;
+  margin-bottom: 1px;
 }
 
 .p-btn {
@@ -144,10 +145,20 @@
 }
 
 .select-container {
+
+  .ember-basic-dropdown-trigger {
+    border-radius: 4px;
+  }
+
+  .ember-power-select-trigger {
+    background-color: #fff;
+  }
+
+
   display: flex;
   align-items: center;
   padding-top: 2px;
-  padding-bottom: 10px;
+  padding-bottom: 15px;
 
   .p-value {
     width: 120px;
@@ -210,7 +221,7 @@
 // IFTA STYLING
 
 .ui-description {
-  margin: -10px 0 15px 3px;
+  margin: -10px 0 10px 3px;
 
   &.error {
     color: @red;
@@ -243,7 +254,7 @@
       }
     }
 
-    textarea {
+    textarea, select {
       margin: 0px 10px 10px 10px;
       border: none;
       outline: none;

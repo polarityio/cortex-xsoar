@@ -157,10 +157,10 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
       indicator
         ? [
             ...(indicator.firstSeen
-              ? [`First Seen: ${moment(indicator.firstSeen).format('MMM D YY')}`]
+              ? [`First Seen: ${moment(indicator.firstSeen.slice(0, 23)+"Z").format('MMMM Do YYYY, h:mm:ss a')}`]
               : []),
             ...(indicator.lastSeen
-              ? [`Last Seen: ${moment(indicator.lastSeen).format('MMM D YY')}`]
+              ? [`Last Seen: ${moment(indicator.lastSeen.slice(0, 23)+"Z").format('MMMM Do YYYY, h:mm:ss a')}`]
               : [])
           ]
         : []

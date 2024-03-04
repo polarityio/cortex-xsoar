@@ -13,7 +13,7 @@
             class="nav-link {{if (eq state.activeTab "incidents") "active"}}"
             href="#"
     >
-      Incidents ({{incidents.length}})
+      Incidents ({{#if incidents}}{{incidents.length}}{{else}}0{{/if}})
     </a>
   </li>
   <li class="nav-item">
@@ -22,7 +22,7 @@
             class="nav-link {{if (eq state.activeTab "write") "active"}}"
             href="#"
     >
-      {{fa-icon icon="plus-circle" fixedWidth=true class="tab-icon"}} Evidence
+      {{fa-icon icon="plus-circle" fixedWidth=true}} Add Evidence
     </a>
   </li>
 </ul>
@@ -43,7 +43,7 @@
           <span class="p-key">Status:</span>
           <span class="p-value">Polarity did not find this entity as an Indicator in Cortex XSOAR</span>
         </div>
-        <div class="view-in-ts create-in-phantom">
+        <div class="view-in-ts create-in-phantom mt-1">
           <a class="p-link" href="{{baseUrl}}/indicators">Create Indicator in Cortex XSOAR Dashboard
             {{fa-icon "external-link-square" class="external-link-icon"}}</a>
         </div>
@@ -51,7 +51,6 @@
         <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Indicator</h1>
 
         <div class="select-container">
-          <span class="p-value">Indicator Type: </span>
           {{#power-select
                   options=foundIndicatorTypes
                   selected=selectedIndicatorType
@@ -70,9 +69,16 @@
           {{/power-select}}
         </div>
 
-        <div class="select-container pt-1">
-          <span class="p-value">Reputation: </span>
-          <select class="w-100" onchange={{action (mut reputation) value="target.value"}}>
+        <div class="input-container">
+          <label class="small ifta-label">
+            Reputation
+            <span class="required">*</span>
+          </label>
+          <select
+            class="ifta-field"
+            {{on "change" (pick "target.value" (set this "reputation"))}}
+            disabled={{state.isWriting}}
+          >
             <option style="color: #9aa0a3; font-weight: 600" value="0">
               {{fa-icon "burn" fixedWidth=true}} None
             </option>
@@ -86,17 +92,21 @@
               {{fa-icon "bullhorn" fixedWidth=true}} Bad
             </option>
           </select>
+          {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
         </div>
 
-        <div class="select-container last">
-          <span class="p-value">Add a Comment: </span>
-          <input
-                  type="text"
-                  class="w-100"
-                  placeholder="Polarity Indicator Comment"
-                  onchange={{action (mut indicatorComment) value="target.value"}}
-                  value={{indicatorComment}}
-          />
+        <div class="input-container text-area-container {{if block._state.isSending "disabled"}}">
+          <label class="small">
+            Add a comment
+          </label>
+          {{textarea
+            class="ifta-field"
+            rows=5
+            placeholder="Polarity indicator comment"
+            value=indicatorComment
+            disabled=block._state.isSending
+            required=false
+          }}
         </div>
 
         <div class="d-flex flex-row justify-content-between align-items-center">
@@ -272,14 +282,15 @@
 {{#if (eq state.activeTab "incidents")}}
   <div class="mt-2">
     {{#if (and allowIncidentCreation (not incidents.length))}}
-      <div>
+      <div class="mb-1">
         <span class="p-key">Name: </span>
         <span class="p-value">{{entityValue}}</span>
       </div>
       <p>
         Status: <b>Polarity did not find this entity as an Incident in Cortex XSOAR</b>
       </p>
-      <div class="view-in-ts create-in-phantom">
+
+      <div class="view-in-ts create-in-phantom mt-1">
         <a class="p-link" href="{{baseUrl}}/incidents">Create Incident in Cortex XSOAR Dashboard
           {{fa-icon "external-link-square" class="external-link-icon"}}</a>
       </div>
@@ -287,39 +298,48 @@
       <h1 class="p-title">{{fa-icon "info-circle" fixedWidth=true}} Create Incident and Run Playbook</h1>
 
       <div class="select-container">
-        <span class="p-value">Details: </span>
-        <input
-                type="text"
-                class="w-100"
-                placeholder="Polarity Upload Details"
-                onchange={{action (mut submissionDetails) value="target.value"}}
-                value={{submissionDetails}}
-        />
-      </div>
-
-      <div class="select-container">
-        <span class="p-value">Type: </span>
         {{#power-select
                 options=foundIncidentTypes
                 selected=selectedIncidentType
                 searchEnabled=true
                 searchField="info"
-                placeholder="Select Incident Types..."
+                placeholder="Select Incident Type ..."
                 triggerClass="form-control"
                 search=(action "searchIncidentTypes")
                 searchMessage="Loading Incident Types ..."
                 loadingMessage="Loading Incident Types ..."
                 searchPlaceholder="Search Incident Types"
                 closeOnSelect=true
+                disabled=isRunning
                 onOpen=(action "searchIncidentTypes" "")
                 onChange=(action (mut selectedIncidentType)) as |type|}}
           <span>{{type.name}}</span>
         {{/power-select}}
       </div>
 
-      <div class="select-container pt-1">
-        <span class="p-value">Severity: </span>
-        <select class="w-100" onchange={{action (mut severity) value="target.value"}}>
+      <div class="input-container text-area-container {{if isRunning "disabled"}}">
+        <label class="small">
+          Details:
+        </label>
+        {{textarea
+          class="ifta-field"
+          rows=5
+          placeholder="Incident details"
+          value=submissionDetails
+          disabled=isRunning
+          required=false
+        }}
+      </div>
+
+      <div class="input-container">
+        <label class="small ifta-label">
+          Severity
+        </label>
+        <select
+          class="ifta-field"
+          {{on "change" (pick "target.value" (set this "severity"))}}
+          disabled={{isRunning}}
+        >
           <option style="color: #9AA0A3; font-weight: 600" value="0">
             {{fa-icon "bomb" fixedWidth=true}} Unknown
           </option>
@@ -339,13 +359,26 @@
             {{fa-icon "exclamation" fixedWidth=true}} Critical
           </option>
         </select>
+        {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
       </div>
 
-      <select class="w-100" size=5 onchange={{action (mut newIncidentPlaybookId) value="target.value"}}>
-        {{#each playbooks as |playbook|}}
-          <option value="{{playbook.id}}">{{playbook.name}}</option>
-        {{/each}}
-      </select>
+      <div class="input-container">
+        <label class="small ifta-label">
+          Playbook
+        </label>
+        <select
+                class="ifta-field"
+          {{on "change" (pick "target.value" (set this "newIncidentPlaybookId"))}}
+                disabled={{isRunning}}
+        >
+          <option selected value="">-- No Associated Playbook --</option>
+          {{#each playbooks as |playbook|}}
+            <option value="{{playbook.id}}">{{playbook.name}}</option>
+          {{/each}}
+        </select>
+        {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
+      </div>
+
       <div class="d-flex flex-row justify-content-between align-items-center">
         <div>
           {{#if isRunning}}
@@ -376,7 +409,7 @@
           <hr>
         {{/if}}
         <div class="p-title">
-          {{fa-icon icon="siren-on" fixedWidth=true}} #{{incident.id}} {{incident.name}} - Incident Info
+          {{fa-icon icon="shield-alt" fixedWidth=true}} #{{incident.id}} {{incident.name}} - Incident Info
         </div>
         <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Cortex XSOAR
           {{fa-icon "external-link-square" class="external-link-icon"}}</a>
@@ -497,6 +530,10 @@
               {{/each}}
             </div>
           {{/if}}
+
+          <div class="p-action mt-2" {{action "addEvidence" incident.id}}>
+            {{fa-icon icon="plus-circle" fixedWidth=true}} Add evidence
+          </div>
         {{/if}}
 
         {{#if (eq incident.__activeTab "history")}}
@@ -586,6 +623,13 @@
 
 {{#if (eq state.activeTab "write")}}
   <div class="write-container">
+    <h1 class="p-title">
+      {{fa-icon icon="plus" fixedWidth=true}}
+      Add Evidence
+      {{#if state.xsoarIncidentId}}
+        to Incident #{{state.xsoarIncidentId}}
+      {{/if}}
+    </h1>
     <div class="mt-2">
       Data from selected integrations will be submitted as JSON formatted evidence to the selected Incident.
     </div>
@@ -632,12 +676,12 @@
     --}}
     <div class="input-container mt-2 {{if uiElement.error "error"}}">
       <label class="small ifta-label">
-        Incident
+        Related Incidents
         <span class="required">*</span>
       </label>
       <select
               class="ifta-field {{if state.missingIncidentId "error"}}"
-        {{on "change" (pick "target.value" (set this "state.xsoarIncidentId"))}}
+        {{on "change" (pipe (pick "target.value" (set this "state.xsoarIncidentId"))(set this "state.success" false))}}
               required=true
               disabled={{state.isWriting}}
       >
@@ -650,12 +694,37 @@
       </select>
       {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
     </div>
+    <div class="input-container">
+      <label class="small ifta-label">
+        Incident Id
+        <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        class="ifta-field {{if state.missingIncidentId "error"}}"
+        {{on "input" (pick "target.value" (set this "state.xsoarIncidentId"))}}
+        placeholder="Incident Id"
+        disabled={{state.isWriting}}
+        required=true
+      >
+    </div>
     <div class="ui-description p-footnote {{if state.missingIncidentId "error"}}">
       Select an incident to add evidence to.
     </div>
-    <div class="d-flex align-items-center justify-content-between">
-      <div class="submit-evidence-status-message {{if statusMessageIsVisible 'visible' 'hidden'}}">
-        {{#if (eq statusMessageType "error")}}
+    {{#if state.success}}
+        <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.successIncidentId}}">
+          View updated evidence for Incident #{{state.successIncidentId}}
+          {{fa-icon "external-link-square" class="external-link-icon"}}
+        </a>
+    {{else if state.xsoarIncidentId}}
+      <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.xsoarIncidentId}}">
+        View existing evidence for Incident #{{state.xsoarIncidentId}}
+        {{fa-icon "external-link-square" class="external-link-icon"}}
+      </a>
+    {{/if}}
+    <div class="d-flex align-items-center justify-content-between mt-3">
+      <div class="submit-evidence-status-message {{if state.showStatusMessage 'visible' 'hidden'}}">
+        {{#if (eq state.statusMessageType "error")}}
           {{fa-icon icon="exclamation-triangle" fixedWidth=true class="submit-error-icon"}}
         {{else}}
           {{fa-icon icon="check" fixedWidth=true class="submit-success-icon"}}
@@ -683,14 +752,6 @@
                     click=(action (set this "state.writeErrorMessage" ""))}}
         </div>
         <div class="error-item">{{state.writeErrorMessage}}</div>
-      </div>
-    {{/if}}
-    {{#if state.success}}
-      <div class="mt-2">
-        <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.successIncidentId}}">
-          View Evidence for Incident #{{state.successIncidentId}}
-          {{fa-icon "external-link-square" class="external-link-icon"}}
-        </a>
       </div>
     {{/if}}
   </div>

@@ -54,7 +54,7 @@ polarity.export = PolarityComponent.extend({
       } else if (this.get('incidents.length')) {
         this.set('state.activeTab', 'incidents');
       } else {
-        this.set('state.activeTab', 'write');
+        this.set('state.activeTab', 'indicators');
       }
     }
 
@@ -89,9 +89,11 @@ polarity.export = PolarityComponent.extend({
       .finally(() => {
         outerThis.get('block').notifyPropertyChange('data');
         setTimeout(() => {
-          outerThis.setMessage(null, '');
-          outerThis.setErrorMessage(null, '');
-          outerThis.get('block').notifyPropertyChange('data');
+          if(!this.isDestroyed) {
+            outerThis.setMessage(null, '');
+            outerThis.setErrorMessage(null, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }
         }, 5000);
         resolve();
       });
@@ -125,9 +127,11 @@ polarity.export = PolarityComponent.extend({
       .finally(() => {
         outerThis.get('block').notifyPropertyChange('data');
         setTimeout(() => {
-          outerThis.setMessage(null, '');
-          outerThis.setErrorMessage(null, '');
-          outerThis.get('block').notifyPropertyChange('data');
+          if(!this.isDestroyed) {
+            outerThis.setMessage(null, '');
+            outerThis.setErrorMessage(null, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }
         }, 5000);
         resolve();
       });
@@ -188,6 +192,15 @@ polarity.export = PolarityComponent.extend({
         Ember.run.debounce(this, this.searchIndicatorTypes, term, resolve, reject, 500);
       });
     },
+    addEvidence: function(incidentId) {
+      this.set('state.showStatusMessage', false);
+      this.set('state.statusMessageType', '');
+      this.set('state.success', false);
+      this.set('state.xsoarIncidentId', incidentId);
+      this.set('state.missingIncidentId', false);
+      this.setIntegrationSelection();
+      this.set('state.activeTab', 'write');
+    },
     writeIntegrationData: function () {
       this.set('state.missingIncidentId', false);
       this.set('state.missingIntegrations', false);
@@ -230,13 +243,28 @@ polarity.export = PolarityComponent.extend({
           this.set('state.success', true);
           this.set('state.writeStatus', 'Results pushed successfully');
           this.set('state.successIncidentId', xsoarIncidentId);
+          this.set('state.statusMessageType', '');
+          this.set('state.statusMessage', 'Evidence submitted');
         })
         .catch((err) => {
-          this.set('state.writeErrorMessage', JSON.stringify(err));
+          if(err.meta){
+            this.set('state.writeErrorMessage', JSON.stringify(err.meta, null, 2));
+          } else {
+            this.set('state.writeErrorMessage', JSON.stringify(err, null, 2));
+          }
+
           this.set('state.success', false);
+          this.set('state.statusMessage', 'Error adding evidence');
+          this.set('state.statusMessageType', 'error');
         })
         .finally(() => {
           this.set('state.isWriting', false);
+          this.set('state.showStatusMessage', true);
+          setTimeout(() => {
+            if(!this.isDestroyed) {
+              this.set('state.showStatusMessage', false);
+            }
+          }, 3000);
         });
     },
     createIndicator: function () {
@@ -272,9 +300,11 @@ polarity.export = PolarityComponent.extend({
           outerThis.set('isIndicatorRunning', false);
           outerThis.get('block').notifyPropertyChange('data');
           setTimeout(() => {
-            outerThis.set('indicatorMessage', '');
-            outerThis.set('indicatorErrorMessage', '');
-            outerThis.get('block').notifyPropertyChange('data');
+            if(!this.isDestroyed) {
+              outerThis.set('indicatorMessage', '');
+              outerThis.set('indicatorErrorMessage', '');
+              outerThis.get('block').notifyPropertyChange('data');
+            }
           }, 5000);
         });
     },
@@ -316,11 +346,14 @@ polarity.export = PolarityComponent.extend({
         })
         .finally(() => {
           outerThis.setRunning(incidentIndex, false);
+          outerThis.setRunning(null, false);
           outerThis.get('block').notifyPropertyChange('data');
           setTimeout(() => {
-            outerThis.setMessage(incidentIndex, '');
-            outerThis.setErrorMessage(incidentIndex, '');
-            outerThis.get('block').notifyPropertyChange('data');
+            if(!this.isDestroyed) {
+              outerThis.setMessage(incidentIndex, '');
+              outerThis.setErrorMessage(incidentIndex, '');
+              outerThis.get('block').notifyPropertyChange('data');
+            }
           }, 5000);
         });
     }
