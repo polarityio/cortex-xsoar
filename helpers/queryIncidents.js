@@ -6,24 +6,25 @@ const queryIncidents = async (
   requestWithDefaults,
   Logger
 ) => {
-  const entityValues = fp.map(fp.get('value'), entitiesPartition);
-  const {
-    body: { data: incidents }
-  } = await requestWithDefaults({
+  const query = entitiesPartition.map((entity) => `"${entity.value}"`).join(' OR ');
+  const requestOptions = {
     url: `${options.url}/incidents/search`,
     method: 'POST',
+    json: true,
     headers: {
-      authorization: options.apiKey,
-      'Content-type': 'application/json'
+      authorization: options.apiKey
     },
     body: {
       filter: {
-        name: entityValues,
-        labels: entityValues
+        query
       }
     }
-  }).catch((error) => {
-    Logger.error({ error }, 'Incident Query Error');
+  };
+  Logger.debug({requestOptions}, 'Incident Search Request Options');
+  const {
+    body: { data: incidents }
+  } = await requestWithDefaults(requestOptions).catch((error) => {
+    Logger.error(error, 'Incident Query Error');
     throw error;
   });
 
