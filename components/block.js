@@ -411,11 +411,17 @@ polarity.export = PolarityComponent.extend({
       this.set('isRunning', isRunning);
     }
   },
-  // onDetailsOpened: function () {
-  //   this.setIntegrationSelection();
-  // },
   setIntegrationSelection: function () {
-    this.set('state.integrations', this.getIntegrationData());
+    let integrationData = this.getIntegrationData();
+    let annotations = this.getAnnotations();
+    if (Array.isArray(annotations) && annotations.length > 0) {
+      integrationData.unshift({
+        integrationName: 'Polarity Annotations',
+        data: annotations,
+        selected: false
+      });
+    }
+    this.set('state.integrations', integrationData);
   },
   getIntegrationData: function () {
     const notificationList = this.notificationsData.getNotificationList();
