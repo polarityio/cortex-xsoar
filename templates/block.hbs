@@ -225,13 +225,13 @@
             {{#if indicator.firstSeen}}
               <div>
                 <span class="p-key">First Seen:</span>
-                <span class="p-value">{{indicator.firstSeen}}</span>
+                <span class="p-value">{{moment-format indicator.firstSeen "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
               </div>
             {{/if}}
             {{#if indicator.lastSeen}}
               <div>
                 <span class="p-key">Last Seen:</span>
-                <span class="p-value">{{indicator.lastSeen}}</span>
+                <span class="p-value">{{moment-format indicator.lastSeen "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
               </div>
             {{/if}}
             <div class="work-plan-link">
@@ -507,7 +507,7 @@
           {{#if incident.created}}
             <div>
               <span class="p-key">Date Created:</span>
-              <span class="p-value">{{incident.created}}</span>
+              <span class="p-value">{{moment-format incident.created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
             </div>
           {{/if}}
           {{#if incident.owner}}
@@ -605,7 +605,7 @@
                     </div>
                     <div>
                       <span class="p-key">Run Date:</span>
-                      <span class="p-value">{{playbookRun.date}}</span>
+                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
                     </div>
                     <div class="work-plan-link">
                       <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
@@ -613,8 +613,8 @@
                     </div>
                   {{else}}
                     <div class="playbook-run-date">
-                      <span class="p-key">Date:</span>
-                      <span class="p-value">{{playbookRun.date}}</span>
+                      <span class="p-key">Run Date:</span>
+                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
                     </div>
                   {{/if}}
                 </div>

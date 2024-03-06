@@ -85,10 +85,7 @@ const _formatFoundIncidentResults = (
     summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity, [], Logger),
     details: {
       playbooks,
-      incidents: getKeys(
-        RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-        incidentsForThisEntity
-      ).map(formatIncidentDate),
+      incidents: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, incidentsForThisEntity),
       indicators: indicatorsForThisEntity,
       baseUrl: `${options.url}/#`
     }
@@ -120,11 +117,6 @@ const _formatNoIncidentFoundResults = (
       indicators: indicatorsForThisEntity
     }
   }
-});
-
-const formatIncidentDate = ({ created, ...incident }) => ({
-  ...incident,
-  created: moment(created).format('MMM D YY, h:mm A')
 });
 
 const createSummary = (
@@ -198,6 +190,5 @@ const createSummary = (
 
 module.exports = {
   formatDemistoResults,
-  formatIncidentDate,
   createSummary
 };

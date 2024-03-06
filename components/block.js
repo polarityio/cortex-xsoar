@@ -1,4 +1,7 @@
 polarity.export = PolarityComponent.extend({
+  timezone: Ember.computed('Intl', function () {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }),
   notificationsData: Ember.inject.service('notificationsData'),
   state: Ember.computed.alias('block._state'),
   details: Ember.computed.alias('block.data.details'),

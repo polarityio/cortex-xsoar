@@ -1,5 +1,4 @@
 const { createSummary } = require('./formatDemistoResults');
-const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 const { getOr, toNumber } = require('lodash/fp');
 
@@ -160,9 +159,7 @@ const _createContainerAndRunPlaybook = async (
       requestWithDefaults
     );
 
-    const newIncident = formatIncidentDate(newlyCreatedIncident);
-
-    await _startInvestigation(newIncident, options, requestWithDefaults);
+    await _startInvestigation(newlyCreatedIncident, options, requestWithDefaults);
 
     const { body: playbookRunHistory } = await _getPlaybookRunHistory(
       newIncident,
