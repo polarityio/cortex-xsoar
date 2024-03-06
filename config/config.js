@@ -50,7 +50,7 @@ module.exports = {
       key: 'allowIndicatorCreation',
       name: 'Allow Indicator Creation',
       description:
-        'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+        'If checked, users will be able to create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -60,7 +60,7 @@ module.exports = {
       key: 'allowIncidentCreation',
       name: 'Allow Incident Creation',
       description:
-        'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+        'If checked, users will be able to create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
@@ -70,7 +70,7 @@ module.exports = {
       key: 'allowEvidenceSubmission',
       name: 'Allow Evidence Submission',
       description:
-          'If checked, users will be able submit data from selected Polarity integrations as Incident evidence.',
+          'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
       default: false,
       type: 'boolean',
       userCanEdit: false,
