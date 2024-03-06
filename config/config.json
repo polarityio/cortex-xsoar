@@ -1,4 +1,5 @@
 {
+  "polarityIntegrationUuid": "d830fb30-cce1-11ed-aeee-075d3490155d",
   "name": "Cortex XSOAR",
   "acronym": "CX",
   "description": "Cortex XSOAR provides automation and security orchestration capabilities.",
@@ -30,7 +31,7 @@
     "proxy": ""
   },
   "logging": {
-    "level": "trace"
+    "level": "info"
   },
   "options": [
     {
@@ -68,7 +69,15 @@
       "type": "boolean",
       "userCanEdit": false,
       "adminOnly": false
+    },
+    {
+      "key": "allowEvidenceSubmission",
+      "name": "Allow Evidence Submission",
+      "description": "If checked, users will be able submit data from selected Polarity integrations as Incident evidence.",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": false
     }
-  ],
-  "polarityIntegrationUuid": "d830fb30-cce1-11ed-aeee-075d3490155d"
+  ]
 }

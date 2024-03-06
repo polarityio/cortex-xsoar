@@ -1,30 +1,36 @@
 <ul class="nav nav-tabs mt-2">
-  <li class="nav-item">
-    <a
-      {{action "changeTopTab" "indicators"}}
-            class="nav-link  {{if (or (eq state.activeTab "indicators")(not state.activeTab)) "active"}}"
-            href="#">
-      Indicators ({{indicators.length}})
-    </a>
-  </li>
-  <li class="nav-item">
-    <a
-      {{action "changeTopTab" "incidents"}}
-            class="nav-link {{if (eq state.activeTab "incidents") "active"}}"
-            href="#"
-    >
-      Incidents ({{#if incidents}}{{incidents.length}}{{else}}0{{/if}})
-    </a>
-  </li>
-  <li class="nav-item">
-    <a
-      {{action "changeTopTab" "write"}}
-            class="nav-link {{if (eq state.activeTab "write") "active"}}"
-            href="#"
-    >
-      {{fa-icon icon="plus-circle" fixedWidth=true}} Add Evidence
-    </a>
-  </li>
+  {{#if (or (gt indicators.length 0)(eq allowIndicatorCreation true))}}
+    <li class="nav-item">
+      <a
+        {{action "changeTopTab" "indicators"}}
+              class="nav-link  {{if (or (eq state.activeTab "indicators")(not state.activeTab)) "active"}}"
+              href="#">
+        Indicators ({{indicators.length}})
+      </a>
+    </li>
+  {{/if}}
+  {{#if (or (gt incidents.length 0)(eq allowIncidentCreation true))}}
+    <li class="nav-item">
+      <a
+        {{action "changeTopTab" "incidents"}}
+              class="nav-link {{if (eq state.activeTab "incidents") "active"}}"
+              href="#"
+      >
+        Incidents ({{#if incidents}}{{incidents.length}}{{else}}0{{/if}})
+      </a>
+    </li>
+  {{/if}}
+  {{#if block.userOptions.allowEvidenceSubmission}}
+    <li class="nav-item">
+      <a
+        {{action "changeTopTab" "write"}}
+              class="nav-link {{if (eq state.activeTab "write") "active"}}"
+              href="#"
+      >
+        {{fa-icon icon="plus-circle" fixedWidth=true}} Add Evidence
+      </a>
+    </li>
+  {{/if}}
 </ul>
 
 
@@ -39,7 +45,7 @@
         >
           <span class="text none"><span class="desc">Value:</span> {{entityValue}} (new)</span> {{fa-icon "angle-up"}}
         </a>
-        <div>
+        <div class="mt-2">
           <span class="p-key">Status:</span>
           <span class="p-value">Polarity did not find this entity as an Indicator in Cortex XSOAR</span>
         </div>
@@ -531,9 +537,11 @@
             </div>
           {{/if}}
 
-          <div class="p-action mt-2" {{action "addEvidence" incident.id}}>
-            {{fa-icon icon="plus-circle" fixedWidth=true}} Add evidence
-          </div>
+          {{#if block.userOptions.allowEvidenceSubmission}}
+            <div class="p-action mt-2" {{action "addEvidence" incident.id}}>
+              {{fa-icon icon="plus-circle" fixedWidth=true}} Add evidence
+            </div>
+          {{/if}}
         {{/if}}
 
         {{#if (eq incident.__activeTab "history")}}
@@ -634,11 +642,11 @@
       Data from selected integrations will be submitted as JSON formatted evidence to the selected Incident.
     </div>
     <div class="mt-2 d-flex justify-content-between align-items-center">
-      <div class="p-action" {{action "toggleAllIntegrations"}}>
+      <div class="p-action {{if (eq state.integrations.length 0) "invisible"}}" {{action "toggleAllIntegrations"}}>
         Toggle All Integrations
       </div>
       <div class="d-flex align-items-center justify-content-between">
-        <div class="p-footnote">
+        <div class="p-footnote {{if (eq state.integrations.length 0) "invisible"}}">
           {{numSelectedWriteIntegrations}} selected
         </div>
         <button class="btn ml-1 icon-btn p-action" {{action "refreshIntegrations"}} title="Refresh integrations">
@@ -652,98 +660,104 @@
       {{#each state.integrations as | integration |}}
         <label class="integration-write-label d-flex align-items-center">
           <input
-                  disabled={{state.isWriting}}
-                  type="checkbox"
-                  checked={{integration.selected}}
-                  onclick={{action (mut integration.selected) value="target.checked"}}
+            disabled={{state.isWriting}}
+            type="checkbox"
+            checked={{integration.selected}}
+            onclick={{action (mut integration.selected) value="target.checked"}}
           >
           <div class="label-text">
             {{integration.integrationName}}
           </div>
         </label>
       {{/each}}
+      {{#if (eq state.integrations.length 0)}}
+        <div>No integration data available.</div>
+        <div class="p-action mt-1" {{action "refreshIntegrations"}}>Click here to refresh integration data</div>
+      {{/if}}
     </div>
     <div class="integration-labels-description p-footnote {{if state.missingIntegrations "error-text"}}">
-      Select one or more integrations to use as Evidence
+      {{#if (eq state.integrations.length 0)}}
+        At least one integration must return data before you can submit evidence.
+      {{else}}
+        Select one or more integrations to use as Evidence
+      {{/if}}
     </div>
-    {{!--
-    <div class="mt-2">
-      <input
-        type="text"
-        {{on "input" (pick "target.value" (set this "state.xsoarIncidentId"))}}
-      >
-    </div>
-    --}}
-    <div class="input-container mt-2 {{if uiElement.error "error"}}">
-      <label class="small ifta-label">
-        Related Incidents
-        <span class="required">*</span>
-      </label>
-      <select
-              class="ifta-field {{if state.missingIncidentId "error"}}"
-        {{on "change" (pipe (pick "target.value" (set this "state.xsoarIncidentId"))(set this "state.success" false))}}
-              required=true
-              disabled={{state.isWriting}}
-      >
-        <option disabled selected value=""> -- Select an Incident --</option>
-        {{#each details.incidents as | incident |}}
-          <option value="{{incident.id}}" selected={{if (eq incident.id state.xsoarIncidentId) true}}>
-            #{{incident.id}} {{incident.name}}
-          </option>
-        {{/each}}
-      </select>
-      {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
-    </div>
-    <div class="input-container">
-      <label class="small ifta-label">
-        Incident Id
-        <span class="required">*</span>
-      </label>
-      <input
-        type="text"
-        class="ifta-field {{if state.missingIncidentId "error"}}"
-        {{on "input" (pick "target.value" (set this "state.xsoarIncidentId"))}}
-        placeholder="Incident Id"
-        disabled={{state.isWriting}}
-        required=true
-      >
-    </div>
-    <div class="ui-description p-footnote {{if state.missingIncidentId "error"}}">
-      Select an incident to add evidence to.
-    </div>
-    {{#if state.success}}
-        <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.successIncidentId}}">
-          View updated evidence for Incident #{{state.successIncidentId}}
+
+    {{#if (gt state.integrations.length 0)}}
+      <div class="input-container mt-2 {{if uiElement.error "error"}}">
+        <label class="small ifta-label">
+          Related Incidents
+          <span class="required">*</span>
+        </label>
+        <select
+          class="ifta-field {{if state.missingIncidentId "error"}}"
+          {{on "change" (pick "target.value" (action "evidenceIncidentIdChanged"))}}
+          required=true
+          disabled={{state.isWriting}}
+        >
+          <option disabled selected value=""> -- Select an Incident --</option>
+          <option value="custom_id"> -- Provide your own Incident ID --</option>
+          {{#each details.incidents as | incident |}}
+            <option value="{{incident.id}}" selected={{if (eq incident.id state.xsoarIncidentId) true}}>
+              #{{incident.id}} {{incident.name}}
+            </option>
+          {{/each}}
+        </select>
+        {{fa-icon icon="chevron-down" fixedWidth=true class="select-arrow"}}
+      </div>
+      {{#if state.showCustomIncidentId}}
+        <div class="input-container">
+          <label class="small ifta-label">
+            Incident Id
+            <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            class="ifta-field {{if state.missingIncidentId "error"}}"
+            {{on "input" (pick "target.value" (set this "state.xsoarIncidentId"))}}
+            placeholder="Incident Id"
+            disabled={{state.isWriting}}
+            required=true
+          >
+        </div>
+      {{/if}}
+      <div class="ui-description p-footnote {{if state.missingIncidentId "error"}}">
+        Select an incident to add evidence to.
+      </div>
+      {{#if state.success}}
+          <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.successIncidentId}}">
+            View updated evidence for Incident #{{state.successIncidentId}}
+            {{fa-icon "external-link-square" class="external-link-icon"}}
+          </a>
+      {{else if state.xsoarIncidentId}}
+        <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.xsoarIncidentId}}">
+          View existing evidence for Incident #{{state.xsoarIncidentId}}
           {{fa-icon "external-link-square" class="external-link-icon"}}
         </a>
-    {{else if state.xsoarIncidentId}}
-      <a class="p-link" href="{{baseUrl}}/EvidenceBoard/{{state.xsoarIncidentId}}">
-        View existing evidence for Incident #{{state.xsoarIncidentId}}
-        {{fa-icon "external-link-square" class="external-link-icon"}}
-      </a>
-    {{/if}}
-    <div class="d-flex align-items-center justify-content-between mt-3">
-      <div class="submit-evidence-status-message {{if state.showStatusMessage 'visible' 'hidden'}}">
-        {{#if (eq state.statusMessageType "error")}}
-          {{fa-icon icon="exclamation-triangle" fixedWidth=true class="submit-error-icon"}}
-        {{else}}
-          {{fa-icon icon="check" fixedWidth=true class="submit-success-icon"}}
-        {{/if}}
-        {{state.statusMessage}}
+      {{/if}}
+      <div class="d-flex align-items-center justify-content-between mt-3">
+        <div class="submit-evidence-status-message {{if state.showStatusMessage 'visible' 'hidden'}}">
+          {{#if (eq state.statusMessageType "error")}}
+            {{fa-icon icon="exclamation-triangle" fixedWidth=true class="submit-error-icon"}}
+          {{else}}
+            {{fa-icon icon="check" fixedWidth=true class="submit-success-icon"}}
+          {{/if}}
+          {{state.statusMessage}}
+        </div>
+        <button
+          {{action "writeIntegrationData"}}
+                class="p-btn btn btn-light"
+                disabled={{state.isWriting}}
+        >
+          {{#if state.isWriting}}
+            {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
+          {{else}}
+            {{fa-icon icon="paper-plane" fixedWidth=true}}
+          {{/if}}
+          Add Evidence
+        </button>
       </div>
-      <button
-        {{action "writeIntegrationData"}}
-              class="p-btn btn btn-light"
-              disabled={{state.isWriting}}
-      >
-        {{#if state.isWriting}}
-          {{fa-icon icon="spinner-third" fixedWidth=true spin=true}}
-        {{else}}
-          {{fa-icon icon="paper-plane" fixedWidth=true}}
-        {{/if}}
-        Add Evidence
-      </button>
-    </div>
+    {{/if}}
     {{#if state.writeErrorMessage}}
       <div class="alert alert-danger mt-2 error-container">
         <div class="d-flex align-items-center justify-content-between">

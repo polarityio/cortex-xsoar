@@ -32,18 +32,9 @@ const createIndicator = async (
       throw noIndicatorReturnedOnCreationError;
     }
 
-    const newIndicator = fp.thru(
-      ({ firstSeen, lastSeen, ...indicator }) => ({
-        ...indicator,
-        firstSeen: moment(firstSeen).format('MMM D YY, h:mm A'),
-        lastSeen: moment(lastSeen).format('MMM D YY, h:mm A')
-      }),
-      newlyCreatedIndicator
-    );
-
     callback(null, {
-      newIndicator,
-      newSummary: createSummary([], [newIndicator], summary)
+      newIndicator: newlyCreatedIndicator,
+      newSummary: createSummary([], [newlyCreatedIndicator], summary, Logger)
     });
   } catch (error) {
     Logger.error(
