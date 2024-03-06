@@ -130,12 +130,11 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaul
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
-    },
-  })
-    .catch((error) => {
-      Logger.error({ error }, 'Playbook Run Error');
-      throw error;
-    });
+    }
+  }).catch((error) => {
+    Logger.error({ error }, 'Playbook Run Error');
+    throw error;
+  });
 
 const _createContainerAndRunPlaybook = async (
   entityValue,

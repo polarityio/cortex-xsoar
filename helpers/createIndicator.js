@@ -28,7 +28,7 @@ const createIndicator = async (
 
       noIndicatorReturnedOnCreationError.description =
         'No Indicator Returned On Creation';
-      
+
       throw noIndicatorReturnedOnCreationError;
     }
 
@@ -86,14 +86,19 @@ const _createIndicatorRequest = (
   });
 
 const _getEntityType = ({ isIP, isHash, isDomain, isEmail }) =>
-  isIP ? 'ip' : 
-  isDomain ? 'domain' : 
-  isEmail ? 'email' : 
-  isHash && (
-    hashType === 'MD5' ? 'md5' : 
-    hashType === 'SHA1' ? 'sha1' : 
-    hashType === 'SHA256' ? 'sha256' : 
-    'otherHash'
-  ); 
+  isIP
+    ? 'ip'
+    : isDomain
+    ? 'domain'
+    : isEmail
+    ? 'email'
+    : isHash &&
+      (hashType === 'MD5'
+        ? 'md5'
+        : hashType === 'SHA1'
+        ? 'sha1'
+        : hashType === 'SHA256'
+        ? 'sha256'
+        : 'otherHash');
 
 module.exports = createIndicator;

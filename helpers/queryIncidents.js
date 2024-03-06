@@ -20,7 +20,7 @@ const queryIncidents = async (
       }
     }
   };
-  Logger.debug({requestOptions}, 'Incident Search Request Options');
+  Logger.debug({ requestOptions }, 'Incident Search Request Options');
   const {
     body: { data: incidents }
   } = await requestWithDefaults(requestOptions).catch((error) => {

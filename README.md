@@ -5,7 +5,7 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-Polarity's Cortex XSOAR integration allows automated queries against Cortex XSOAR's incident database, create incidents from entities, and allows a user to execute pre-defined playbooks from the Polarity overlay window.
+Polarity's Cortex XSOAR integration searches Cortex XSOAR Incidents and Indicators.  It also supports creating incidents from entities, and allows a user to execute pre-defined playbooks from the Polarity Overlay Window.  Additionally, user's can submit data from other Polarity integrations as evidence for an Incident.  Finally, the integration supports creating indicators from the Overlay Window.
 
 ## Normal Incident and Incidator with Playbook History
 <div style="display:flex; justify-content:flex-start; align-items:flex-start;">
