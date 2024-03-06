@@ -214,6 +214,7 @@ polarity.export = PolarityComponent.extend({
 
       this.set('state.success', false);
     },
+    // This method submits evidence for the selected `state.xsoarIncidentId`
     writeIntegrationData: function () {
       this.set('state.missingIncidentId', false);
       this.set('state.missingIntegrations', false);
@@ -260,7 +261,9 @@ polarity.export = PolarityComponent.extend({
           this.set('state.statusMessage', 'Evidence submitted');
         })
         .catch((err) => {
-          if (err.meta) {
+          if (err.meta && err.meta.detail) {
+            this.set('state.writeErrorMessage', err.meta.detail);
+          } else if (err.meta) {
             this.set('state.writeErrorMessage', JSON.stringify(err.meta, null, 2));
           } else {
             this.set('state.writeErrorMessage', JSON.stringify(err, null, 2));

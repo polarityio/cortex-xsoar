@@ -761,11 +761,11 @@
     {{#if state.writeErrorMessage}}
       <div class="alert alert-danger mt-2 error-container">
         <div class="d-flex align-items-center justify-content-between">
-          <div class="error-title">{{fa-icon icon="exclamation-triangle" fixedWidth=true}} An Error Occurred</div>
+          <div class="error-title">{{fa-icon icon="exclamation-triangle" fixedWidth=true class="error-icon"}} Error submitting evidence</div>
           {{fa-icon icon="times" fixedWidth=true class="error-close"
                     click=(action (set this "state.writeErrorMessage" ""))}}
         </div>
-        <div class="error-item">{{state.writeErrorMessage}}</div>
+        <div class="error-item mt-1">{{state.writeErrorMessage}}</div>
       </div>
     {{/if}}
   </div>
