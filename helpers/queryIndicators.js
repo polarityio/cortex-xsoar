@@ -18,7 +18,7 @@ const queryIndicators = async (
     },
     body: { query }
   }).catch((error) => {
-    Logger.error({ error }, 'Indicators Query Error');
+    Logger.error(error, 'Indicators Query Error');
     throw error;
   });
 
