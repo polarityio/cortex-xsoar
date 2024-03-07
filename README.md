@@ -7,26 +7,17 @@
 
 Polarity's Cortex XSOAR integration searches Cortex XSOAR Incidents and Indicators.  It also supports creating incidents from entities, and allows a user to execute pre-defined playbooks from the Polarity Overlay Window.  Additionally, user's can submit data from other Polarity integrations as evidence for an Incident.  Finally, the integration supports creating indicators from the Overlay Window.
 
-## Normal Incident and Incidator with Playbook History
-<div style="display:flex; justify-content:flex-start; align-items:flex-start;">
-  <img width="400" alt="Integration Example Incident Info" src="./assets/indicator-creation-2.png">
-  <img width="404" alt="Integration Example Incident History" src="./assets/incident-playbook-history.png">
-</div>
 
-## Create New Incident
-<div style="display:flex; justify-content:flex-start; align-items:flex-start;">
-  <img width="402" alt="Integration Example New Incident" src="./assets/incident-creation-1.png">
-  <img width="400" alt="Integration Example New Incident Created" src="./assets/incident-creation-2.png">
-</div>
-<div style="display:flex; justify-content:flex-start; align-items:flex-start;">
-  <img width="402" alt="Integration Example New Incident Created Playbooks" src="./assets/incident-creation-3.png">
-</div>
+## Indicator and Incident View with Playbook History
+| ![](assets/indicator.png) | ![](assets/incident.png) | ![](assets/playbook.png)             |
+|---------------------------|--------------------------|--------------------------------------|
+| *View Indicator*          | *View Incident*          | *Run Playbooks and Playbook History* |     
 
-## Create New Indicator
-<div style="display:flex; justify-content:flex-start; align-items:flex-start;">
-  <img width="402" alt="Integration Example New Indicator" src="./assets/indicator-creation-1.png">
-  <img width="400" alt="Integration Example New Indicator Created" src="./assets/indicator-creation-2.png">
-</div>
+## Create New Indicator/Incident and Add Evidence
+| ![](assets/create_indicator.png) | ![](assets/create_incident.png) | ![](assets/add_evidence.png) |
+|----------------------------------|---------------------------------|------------------------------|
+| *Create Indicator*               | *Create Incident*               | *Add Evidence to incident*   |     
+
 
 > To learn more about Cortex XSOAR, visit the [official website](https://register.paloaltonetworks.com/introducingcortexxsoar).
 
