@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const {
   RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-  HUMAN_READABLE_SEVERITY_LEVELS,
+  HUMAN_READABLE_SEVERITY_LEVELS
 } = require('./constants');
 
 const { getKeys } = require('./dataTransformations');
@@ -14,7 +14,8 @@ const formatDemistoResults = (
   indicators,
   options,
   Logger
-) => fp.flatMap(
+) =>
+  fp.flatMap(
     ({ entities, playbooks }) =>
       fp.map((entity) => {
         const incidentsForThisEntity = getIncidentsForThisEntity(
@@ -69,10 +70,7 @@ const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
   );
 
 const getIndicatorsForThisEntity = (indicators, entity) =>
-  fp.filter(
-    ({ value }) => fp.toLower(value) === fp.toLower(entity.value),
-    indicators
-  );
+  fp.filter(({ value }) => fp.toLower(value) === fp.toLower(entity.value), indicators);
 
 const _formatFoundIncidentResults = (
   entity,
@@ -87,11 +85,8 @@ const _formatFoundIncidentResults = (
     summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity, [], Logger),
     details: {
       playbooks,
-      incidents: getKeys(
-        RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
-        incidentsForThisEntity
-      ).map(formatIncidentDate),
-      indicators: formatIndicatorDates(indicatorsForThisEntity),
+      incidents: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, incidentsForThisEntity),
+      indicators: indicatorsForThisEntity,
       baseUrl: `${options.url}/#`
     }
   }
@@ -111,7 +106,7 @@ const _formatNoIncidentFoundResults = (
     summary: [
       'No Incident Found',
       ...(indicatorsForThisEntity.length
-        ? createSummary([], indicatorsForThisEntity,[],Logger)
+        ? createSummary([], indicatorsForThisEntity, [], Logger)
         : ['No Indicators Found'])
     ],
     details: {
@@ -119,57 +114,48 @@ const _formatNoIncidentFoundResults = (
       onDemand: true,
       baseUrl: `${options.url}/#`,
       allowIncidentCreation,
-      indicators: formatIndicatorDates(indicatorsForThisEntity)
+      indicators: indicatorsForThisEntity
     }
   }
 });
 
-const formatIncidentDate = ({ created, ...incident }) => ({
-  ...incident,
-  created: moment(created).format('MMM D YY, h:mm A')
-});
-
-const formatIndicatorDates = fp.map(
-  ({ firstSeen, lastSeen, ...indicatorForThisEntity }) => ({
-    ...indicatorForThisEntity,
-    ...(firstSeen && { firstSeen: moment(firstSeen).format('MMM D YY, h:mm A') }),
-    ...(lastSeen && { lastSeen: moment(lastSeen).format('MMM D YY, h:mm A') })
-  })
-);
-
-const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previousSummary = [], Logger) => {
+const createSummary = (
+  incidentsForThisEntity,
+  indicatorsForThisEntity,
+  previousSummary = [],
+  Logger
+) => {
   const severity = fp.flow(
     fp.map(fp.get('severity')),
     fp.max,
     fp.defaultTo(0)
   )(incidentsForThisEntity);
 
-  const score =
-    fp.flow(
-      fp.map(fp.get('score')),
-      fp.max,
-      fp.defaultTo(0)
-    )(indicatorsForThisEntity);
-  
+  const score = fp.flow(
+    fp.map(fp.get('score')),
+    fp.max,
+    fp.defaultTo(0)
+  )(indicatorsForThisEntity);
+
   const indicatorDates = fp.flow(
     fp.maxBy('score'),
-    fp.thru((indicator) =>
-      indicator
+    fp.thru((indicator) => {
+      return indicator
         ? [
             ...(indicator.firstSeen
-              ? [`First Seen: ${moment(indicator.firstSeen).format('MMM D YY')}`]
+              ? [`First Seen: ${moment(indicator.firstSeen).format('ll')}`]
               : []),
             ...(indicator.lastSeen
-              ? [`Last Seen: ${moment(indicator.lastSeen).format('MMM D YY')}`]
+              ? [`Last Seen: ${moment(indicator.lastSeen).format('ll')}`]
               : [])
           ]
-        : []
-    )
+        : [];
+    })
   )(indicatorsForThisEntity);
 
   const uniqFlatMap = (func) =>
     fp.flow(
-      fp.flatMap(func), 
+      fp.flatMap(func),
       fp.uniq,
       fp.filter((x) => !fp.isEmpty(x))
     )(incidentsForThisEntity);
@@ -204,6 +190,5 @@ const createSummary = (incidentsForThisEntity, indicatorsForThisEntity, previous
 
 module.exports = {
   formatDemistoResults,
-  formatIncidentDate,
   createSummary
 };

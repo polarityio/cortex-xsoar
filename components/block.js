@@ -1,11 +1,33 @@
 polarity.export = PolarityComponent.extend({
+  timezone: Ember.computed('Intl', function () {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }),
+  notificationsData: Ember.inject.service('notificationsData'),
+  state: Ember.computed.alias('block._state'),
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('block.data.summary'),
   incidents: Ember.computed.alias('details.incidents'),
   indicators: Ember.computed.alias('details.indicators'),
   playbooks: Ember.computed.alias('details.playbooks'),
   allowIncidentCreation: Ember.computed.alias('block.userOptions.allowIncidentCreation'),
-  allowIndicatorCreation: Ember.computed.alias('block.userOptions.allowIndicatorCreation'),
+  allowIndicatorCreation: Ember.computed.alias(
+    'block.userOptions.allowIndicatorCreation'
+  ),
+  numSelectedWriteIntegrations: Ember.computed(
+    'state.integrations.@each.selected',
+    function () {
+      let selectedCount = 0;
+      let integrations = this.get('state.integrations');
+      if (integrations) {
+        integrations.forEach((integration) => {
+          if (integration.selected) {
+            selectedCount++;
+          }
+        });
+      }
+      return selectedCount;
+    }
+  ),
   baseUrl: Ember.computed.alias('details.baseUrl'),
   entityValue: Ember.computed.alias('block.entity.value'),
   submissionDetails: '',
@@ -24,6 +46,23 @@ polarity.export = PolarityComponent.extend({
     if (!this.get('allowIncidentCreation') && !this.get('incidents')) {
       this.set('expandableTitleStates', { 0: true });
     }
+
+    if (!this.get('block._state')) {
+      this.set('block._state', {});
+      this.set('state.missingIncidentId', false);
+      this.set('state.missingIntegrations', false);
+
+      if (this.get('indicators.length')) {
+        this.set('state.activeTab', 'indicators');
+      } else if (this.get('incidents.length')) {
+        this.set('state.activeTab', 'incidents');
+      } else if (this.get('allowIndicatorCreation')) {
+        this.set('state.activeTab', 'indicators');
+      } else {
+        this.set('state.activeTab', 'incidents');
+      }
+    }
+
     this._super(...arguments);
   },
   searchIncidentTypes: function (term, resolve, reject) {
@@ -55,9 +94,11 @@ polarity.export = PolarityComponent.extend({
       .finally(() => {
         outerThis.get('block').notifyPropertyChange('data');
         setTimeout(() => {
-          outerThis.setMessage(null, '');
-          outerThis.setErrorMessage(null, '');
-          outerThis.get('block').notifyPropertyChange('data');
+          if (!this.isDestroyed) {
+            outerThis.setMessage(null, '');
+            outerThis.setErrorMessage(null, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }
         }, 5000);
         resolve();
       });
@@ -91,14 +132,32 @@ polarity.export = PolarityComponent.extend({
       .finally(() => {
         outerThis.get('block').notifyPropertyChange('data');
         setTimeout(() => {
-          outerThis.setMessage(null, '');
-          outerThis.setErrorMessage(null, '');
-          outerThis.get('block').notifyPropertyChange('data');
+          if (!this.isDestroyed) {
+            outerThis.setMessage(null, '');
+            outerThis.setErrorMessage(null, '');
+            outerThis.get('block').notifyPropertyChange('data');
+          }
         }, 5000);
         resolve();
       });
   },
   actions: {
+    toggleAllIntegrations: function () {
+      const hasUnSelected = this.get('state.integrations').some(
+        (integration) => !integration.selected
+      );
+      if (hasUnSelected) {
+        // toggle all integrations on if at least one integration is not selected
+        this.get('state.integrations').forEach((integration, index) => {
+          this.set(`state.integrations.${index}.selected`, true);
+        });
+      } else {
+        // all integrations are selected so toggle them all off
+        this.get('state.integrations').forEach((integration, index) => {
+          this.set(`state.integrations.${index}.selected`, false);
+        });
+      }
+    },
     toggleExpandableTitle: function (index) {
       const modifiedExpandableTitleStates = Object.assign(
         {},
@@ -113,6 +172,21 @@ polarity.export = PolarityComponent.extend({
     changeTab: function (incidentIndex, tabName) {
       this.set(`incidents.${incidentIndex}.__activeTab`, tabName);
     },
+    changeTopTab: function (tabName) {
+      this.set('state.activeTab', tabName);
+      if (tabName === 'write' && !Array.isArray(this.get('state.integrations'))) {
+        this.setIntegrationSelection();
+      }
+    },
+    refreshIntegrations: function () {
+      this.set('state.spinRefresh', true);
+      this.setIntegrationSelection();
+      setTimeout(() => {
+        if (!this.isDestroyed) {
+          this.set('state.spinRefresh', false);
+        }
+      }, 1000);
+    },
     searchIncidentTypes: function (term) {
       return new Ember.RSVP.Promise((resolve, reject) => {
         Ember.run.debounce(this, this.searchIncidentTypes, term, resolve, reject, 500);
@@ -122,6 +196,93 @@ polarity.export = PolarityComponent.extend({
       return new Ember.RSVP.Promise((resolve, reject) => {
         Ember.run.debounce(this, this.searchIndicatorTypes, term, resolve, reject, 500);
       });
+    },
+    addEvidence: function (incidentId) {
+      this.set('state.showStatusMessage', false);
+      this.set('state.statusMessageType', '');
+      this.set('state.success', false);
+      this.set('state.xsoarIncidentId', incidentId);
+      this.set('state.missingIncidentId', false);
+      this.setIntegrationSelection();
+      this.set('state.activeTab', 'write');
+    },
+    evidenceIncidentIdChanged: function (incidentId) {
+      if (incidentId === 'custom_id') {
+        this.set('state.showCustomIncidentId', true);
+        this.set('state.xsoarIncidentId', '');
+      } else {
+        this.set('state.xsoarIncidentId', incidentId);
+        this.set('state.showCustomIncidentId', false);
+      }
+
+      this.set('state.success', false);
+    },
+    // This method submits evidence for the selected `state.xsoarIncidentId`
+    writeIntegrationData: function () {
+      this.set('state.missingIncidentId', false);
+      this.set('state.missingIntegrations', false);
+      const integrationData = this.get('state.integrations');
+      const xsoarIncidentId = this.get('state.xsoarIncidentId');
+      this.set('state.writeErrorMessage', '');
+
+      const selectedIntegrations = this.get('state.integrations').filter(
+        (integration) => integration.selected
+      );
+
+      if (typeof xsoarIncidentId === 'undefined') {
+        this.set('state.missingIncidentId', true);
+      }
+
+      if (selectedIntegrations.length === 0) {
+        this.set('state.missingIntegrations', true);
+      }
+
+      if (this.get('state.missingIntegrations') || this.get('state.missingIncidentId')) {
+        return;
+      }
+
+      this.set('state.success', false);
+      this.set('state.isWriting', true);
+
+      const payload = {
+        action: 'writeToIncident',
+        data: {
+          entityValue: this.get('block.entity.value'),
+          incidentId: xsoarIncidentId,
+          integrations: selectedIntegrations
+        }
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((response) => {
+          this.set('state.success', true);
+          this.set('state.writeStatus', 'Results pushed successfully');
+          this.set('state.successIncidentId', xsoarIncidentId);
+          this.set('state.statusMessageType', '');
+          this.set('state.statusMessage', 'Evidence submitted');
+        })
+        .catch((err) => {
+          if (err.meta && err.meta.detail) {
+            this.set('state.writeErrorMessage', err.meta.detail);
+          } else if (err.meta) {
+            this.set('state.writeErrorMessage', JSON.stringify(err.meta, null, 2));
+          } else {
+            this.set('state.writeErrorMessage', JSON.stringify(err, null, 2));
+          }
+
+          this.set('state.success', false);
+          this.set('state.statusMessage', 'Error adding evidence');
+          this.set('state.statusMessageType', 'error');
+        })
+        .finally(() => {
+          this.set('state.isWriting', false);
+          this.set('state.showStatusMessage', true);
+          setTimeout(() => {
+            if (!this.isDestroyed) {
+              this.set('state.showStatusMessage', false);
+            }
+          }, 3000);
+        });
     },
     createIndicator: function () {
       const outerThis = this;
@@ -156,9 +317,11 @@ polarity.export = PolarityComponent.extend({
           outerThis.set('isIndicatorRunning', false);
           outerThis.get('block').notifyPropertyChange('data');
           setTimeout(() => {
-            outerThis.set('indicatorMessage', '');
-            outerThis.set('indicatorErrorMessage', '');
-            outerThis.get('block').notifyPropertyChange('data');
+            if (!this.isDestroyed) {
+              outerThis.set('indicatorMessage', '');
+              outerThis.set('indicatorErrorMessage', '');
+              outerThis.get('block').notifyPropertyChange('data');
+            }
           }, 5000);
         });
     },
@@ -200,11 +363,14 @@ polarity.export = PolarityComponent.extend({
         })
         .finally(() => {
           outerThis.setRunning(incidentIndex, false);
+          outerThis.setRunning(null, false);
           outerThis.get('block').notifyPropertyChange('data');
           setTimeout(() => {
-            outerThis.setMessage(incidentIndex, '');
-            outerThis.setErrorMessage(incidentIndex, '');
-            outerThis.get('block').notifyPropertyChange('data');
+            if (!this.isDestroyed) {
+              outerThis.setMessage(incidentIndex, '');
+              outerThis.setErrorMessage(incidentIndex, '');
+              outerThis.get('block').notifyPropertyChange('data');
+            }
           }, 5000);
         });
     }
@@ -248,5 +414,60 @@ polarity.export = PolarityComponent.extend({
     } else {
       this.set('isRunning', isRunning);
     }
+  },
+  setIntegrationSelection: function () {
+    let integrationData = this.getIntegrationData();
+    let annotations = this.getAnnotations();
+    if (Array.isArray(annotations) && annotations.length > 0) {
+      integrationData.unshift({
+        integrationName: 'Polarity Annotations',
+        data: annotations,
+        selected: false
+      });
+    }
+    this.set('state.integrations', integrationData);
+  },
+  getIntegrationData: function () {
+    const notificationList = this.notificationsData.getNotificationList();
+    const integrationBlocks = notificationList.findByValue(
+      this.get('block.entity.value').toLowerCase()
+    );
+    return integrationBlocks.blocks.reduce((accum, block) => {
+      if (
+        block.integrationName !== this.get('block.integrationName') &&
+        block.type !== 'polarity'
+      ) {
+        accum.push({
+          integrationName: block.integrationName,
+          data: block.data,
+          selected: false
+        });
+      }
+      return accum;
+    }, []);
+  },
+  getAnnotations: function () {
+    const notificationList = this.notificationsData.getNotificationList();
+    const integrationBlocks = notificationList.findByValue(
+      this.get('block.entity.value').toLowerCase()
+    );
+    const polarityBlock = integrationBlocks.blocks.find((block) => {
+      if (block.type === 'polarity') {
+        return block;
+      }
+    });
+    if (polarityBlock) {
+      let annotations = [];
+      polarityBlock.tagEntityPairs.forEach((pair) => {
+        annotations.push({
+          tag: pair.tag.tagName,
+          channel: pair.channel.channelName,
+          user: pair.get('user.username'),
+          applied: pair.applied
+        });
+      });
+      return annotations;
+    }
+    return null;
   }
 });

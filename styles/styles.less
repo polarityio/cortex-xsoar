@@ -1,29 +1,170 @@
+@red: #FF4559;
+@green: #7bc942;
+@dark-green: #63a830;
+
 .external-link-icon {
-  font-size: 10px;
+  font-size: 8px;
+  margin-bottom: 1px;
+}
+
+.p-btn {
+  height: 25px;
+  font-weight: 400;
+  font-size: 12px;
 }
 
 .playbook-container {
   margin-bottom: -2px;
+
   .playbook-run-date {
     margin-top: -4px;
   }
+
   .work-plan-link {
     margin-top: 3px;
   }
 }
 
-.incident-name {
-  padding-bottom: 5px;
+.error-text {
+  color: @red !important;
+  border-color: @red !important;
+}
+
+.submit-evidence-status-message {
+  min-width: max-content;
+  padding: 5px;
+  border-radius: 3px;
+
+  .submit-success-icon {
+    color: @dark-green;
+  }
+
+  .submit-error-icon {
+    color: @red;
+  }
+
+  &.visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.5s linear;
+  }
+
+  &.hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.5s, opacity 0.5s linear;
+  }
+}
+
+.error-container {
+  color: #000;
+  font-size: 10px;
+  padding: 5px;
+
+  .error-title {
+    color: #FF4559; //$p-red
+  }
+
+  .error-item {
+    white-space: pre-wrap;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .error-close {
+    color: #FF4559; //$p-red
+    cursor: pointer;
+
+
+    &:hover {
+      color: darken(#FF4559, 20%);
+    }
+  }
+
+  .error-icon {
+    font-size: 8px;
+    margin-bottom: .5px;
+  }
+}
+
+.icon-btn {
+  font-size: 12px;
+  padding: 0px;
+  height: 20px;
+
+  :active {
+    color: darken(#388e3c, 5%);
+  }
+}
+
+.write-container {
+  .integration-labels-description {
+    margin: 5px 0px 20px 3px;
+  }
+
+  .integration-labels-container {
+    max-height: 200px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 4px;
+    resize: vertical;
+
+    &.disabled {
+      background-color: #f6f6f2;
+    }
+
+    .integration-write-label {
+      cursor: pointer;
+      padding: 3px;
+      margin: 0px;
+      border-radius: 4px;
+
+      .label-text {
+        padding-bottom: 2px;
+        padding-left: 5px;
+      }
+
+      &:hover {
+        background-color: #eee;
+      }
+    }
+  }
+}
+
+
+.nav-item {
+  a.nav-link {
+    &:link,
+    &:visited {
+      color: #7bc942;
+    }
+  }
+
+  a.nav-link.active {
+    color: #495057;
+  }
 }
 
 .p-value {
   word-break: normal;
 }
+
 .select-container {
+
+  .ember-basic-dropdown-trigger {
+    border-radius: 4px;
+  }
+
+  .ember-power-select-trigger {
+    background-color: #fff;
+  }
+
+
   display: flex;
   align-items: center;
   padding-top: 2px;
-  padding-bottom: 10px;
+  padding-bottom: 15px;
 
   .p-value {
     width: 120px;
@@ -39,11 +180,13 @@
   color: #5ccd18;
   font-weight: 600;
   margin-bottom: 5px;
+
   .text {
     color: #5ccd18;
     border-bottom: 1px solid #5ccd18;
+
     .desc {
-      color: #a5a5a5 ;
+      color: #a5a5a5;
       font-weight: 400;
     }
   }
@@ -51,6 +194,7 @@
 
 .none {
   color: #9aa0a3 !important;
+
   & span {
     border-bottom: 1px solid #9aa0a3 !important;
   }
@@ -58,6 +202,7 @@
 
 .suspicious {
   color: #ff9000 !important;
+
   & span {
     border-bottom: 1px solid #ff9000 !important;
   }
@@ -65,6 +210,7 @@
 
 .bad {
   color: #ff1644 !important;
+
   & span {
     border-bottom: 1px solid #ff1644 !important;
   }
@@ -72,7 +218,137 @@
 
 .good {
   color: #00cd33 !important;
+
   & span {
     border-bottom: 1px solid #00cd33 !important;
+  }
+}
+
+// IFTA STYLING
+
+.ui-description {
+  margin: -10px 0 10px 3px;
+
+  &.error {
+    color: @red;
+  }
+}
+
+.input-container {
+  width: 100%;
+  position: relative;
+
+  &.text-area-container {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    z-index: 1;
+
+    &:focus-within {
+      -webkit-appearance: none;
+      outline: none;
+      color: #000000;
+      border-color: @green;
+      box-shadow: 0 0 0 0.2rem rgba(123, 201, 66, 0.25);
+    }
+
+    &.error {
+      border-color: @red;
+
+      &:focus-within {
+        border-color: @green !important;
+      }
+    }
+
+    textarea, select {
+      margin: 0px 10px 10px 10px;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      padding: 0px;
+      width: calc(100% - 20px);
+
+      &.ifta-field:focus {
+        -webkit-appearance: none;
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    label {
+      padding: 3px 10px 5px;
+      margin: 0px;
+    }
+  }
+
+  label {
+    display: block;
+
+    .required {
+      color: @red;
+    }
+  }
+
+  textarea::placeholder, input::placeholder {
+    color: #dfdfdf;
+  }
+
+  textarea:focus::placeholder, input:focus::placeholder {
+    color: transparent;
+  }
+
+  input {
+    cursor: text;
+  }
+
+  .ifta-label {
+    margin-bottom: -15px;
+    z-index: 1;
+    position: relative;
+    padding: 0px 10px 0 10px;
+    pointer-events: none;
+  }
+
+  .ifta-field {
+    border: 0;
+    border-radius: 6px;
+    padding: 15px 10px 5px;
+    margin: 0 0 15px;
+    width: 100%;
+    border: 1px solid #ccc;
+    line-height: 12px;
+    height: 38px;
+
+    &.error {
+      border-color: @red;
+    }
+  }
+
+  .ifta-field:focus {
+    -webkit-appearance: none;
+    outline: none;
+    color: #000000;
+    border-color: @green;
+    box-shadow: 0 0 0 0.2rem rgba(123, 201, 66, 0.25);
+  }
+
+  select.ifta-field {
+    -webkit-appearance: none;
+    outline: none;
+    line-height: 16px;
+  }
+
+  &:focus-within label {
+    color: @dark-green !important;
+  }
+
+  .select-arrow {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+  }
+
+  input:disabled, select:disabled, textarea:disabled, &.text-area-container.disabled {
+    background-color: #f6f6f3 !important;
   }
 }

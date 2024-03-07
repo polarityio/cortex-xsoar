@@ -1,7 +1,8 @@
 module.exports = {
   name: 'Cortex XSOAR',
   acronym: 'CX',
-  description: 'Cortex XSOAR provides automation and security orchestration capabilities.',
+  description:
+    'Cortex XSOAR provides automation and security orchestration capabilities.',
   entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
   styles: ['./styles/styles.less'],
   onDemandOnly: true,
@@ -19,7 +20,7 @@ module.exports = {
     key: '',
     passphrase: '',
     ca: '',
-    proxy: ""
+    proxy: ''
   },
   logging: {
     level: 'info' //trace, debug, info, warn, error, fatal
@@ -38,17 +39,19 @@ module.exports = {
     {
       key: 'apiKey',
       name: 'API Key',
-      description: 'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
+      description:
+        'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'allowIndicatorCreation',
       name: 'Allow Indicator Creation',
-      description: 'If checked, users will be able create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
-      default: false,
+      description:
+        'If checked, users will be able to create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+      default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
@@ -56,11 +59,22 @@ module.exports = {
     {
       key: 'allowIncidentCreation',
       name: 'Allow Incident Creation',
-      description: 'If checked, users will be able create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
-      default: false,
+      description:
+        'If checked, users will be able to create incidents when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.',
+      default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
-    }
+    },
+    {
+      key: 'allowEvidenceSubmission',
+      name: 'Allow Evidence Submission',
+      description:
+          'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
+    },
   ]
 };

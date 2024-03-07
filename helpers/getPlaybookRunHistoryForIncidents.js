@@ -25,12 +25,7 @@ const getPlaybookRunHistoryForIncidents = (
     };
   });
 
-const getPlaybookRunHistory = async (
-  incident,
-  options,
-  Logger,
-  requestWithDefaults
-) => {
+const getPlaybookRunHistory = async (incident, options, Logger, requestWithDefaults) => {
   const { body: playbookRunHistory } = await requestWithDefaults({
     url: `${options.url}/inv-playbook/${incident.id}`,
     method: 'GET',
@@ -38,12 +33,11 @@ const getPlaybookRunHistory = async (
       authorization: options.apiKey,
       'Content-type': 'application/json'
     }
-  })
-    .catch((error) => {
-      Logger.error({ error }, 'Incident Query Error');
-      throw error;
-    });
-    
+  }).catch((error) => {
+    Logger.error({ error }, 'Incident Query Error');
+    throw error;
+  });
+
   return playbookRunHistory;
 };
 
@@ -57,15 +51,11 @@ const formatPlaybookRunHistory = ({
     .thru((playbookRuns) =>
       (playbookRuns || []).concat({
         name: currentPlaybookName,
-        date: moment(currentPlaybookStartDate).format('MMM D YY, h:mm A'),
+        date: currentPlaybookStartDate,
         status: currentPlaybookStatus
       })
     )
     .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
-    .map(({ startDate, ...playbookRun }) => ({
-      ...playbookRun,
-      date: moment(startDate).format('MMM D YY, h:mm A')
-    }))
     .value();
 
 module.exports = { getPlaybookRunHistoryForIncidents, formatPlaybookRunHistory };

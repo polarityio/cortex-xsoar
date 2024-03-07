@@ -9,6 +9,7 @@ const createIndicator = require('./helpers/createIndicator');
 const runPlaybook = require('./helpers/runPlaybook');
 const searchIndicatorTypes = require('./helpers/searchIndicatorTypes');
 const searchIncidentTypes = require('./helpers/searchIncidentTypes');
+const writeToIncident = require('./helpers/writeToIncident');
 
 let Logger;
 let requestWithDefaults;
@@ -37,7 +38,8 @@ const onMessageFunctions = {
   runPlaybook,
   createIndicator,
   searchIndicatorTypes,
-  searchIncidentTypes
+  searchIncidentTypes,
+  writeToIncident
 };
 
 const onMessage = async ({ action, data: actionParams }, { url, ..._options }, callback) =>
