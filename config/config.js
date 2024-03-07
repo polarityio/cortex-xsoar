@@ -28,7 +28,7 @@ module.exports = {
   options: [
     {
       key: 'url',
-      name: 'Url',
+      name: 'URL',
       description:
         'The base URL for the Cortex XSOAR API which should include the schema (i.e., https://)',
       default: '',
