@@ -253,8 +253,6 @@ polarity.export = PolarityComponent.extend({
         }
       };
 
-      console.info('Write Integration Data Payload', payload);
-
       this.sendIntegrationMessage(payload)
         .then((response) => {
           this.set('state.success', true);
