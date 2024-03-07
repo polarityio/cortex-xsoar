@@ -43,8 +43,8 @@ module.exports = {
         'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
-      userCanEdit: true,
-      adminOnly: false
+      userCanEdit: false,
+      adminOnly: true
     },
     {
       key: 'allowIndicatorCreation',
