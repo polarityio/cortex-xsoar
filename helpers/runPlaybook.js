@@ -161,7 +161,7 @@ const _createContainerAndRunPlaybook = async (
     await _startInvestigation(newlyCreatedIncident, options, requestWithDefaults);
 
     const { body: playbookRunHistory } = await _getPlaybookRunHistory(
-      newIncident,
+      newlyCreatedIncident,
       options,
       requestWithDefaults
     );
@@ -170,8 +170,8 @@ const _createContainerAndRunPlaybook = async (
 
     return {
       pbHistory: formattedPlaybookHistory,
-      newIncident,
-      newSummary: createSummary([newIncident], [], summary, Logger)
+      newIncident: newlyCreatedIncident,
+      newSummary: createSummary([newlyCreatedIncident], [], summary, Logger)
     };
   } catch (error) {
     Logger.error(error, 'Incident Creation or Playbook Run Error');
