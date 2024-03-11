@@ -14,9 +14,8 @@ const { formatDemistoResults } = require('./formatDemistoResults');
 const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
   _partitionFlatMap(
     async (_entitiesPartition) => {
-      const { entitiesPartition, ignoredIpLookupResults } = _splitOutIgnoredIps(
-        _entitiesPartition
-      );
+      const { entitiesPartition, ignoredIpLookupResults } =
+        _splitOutIgnoredIps(_entitiesPartition);
 
       const entityGroupsWithPlaybooks = await getPlaybooksByEntityGroup(
         entitiesPartition,

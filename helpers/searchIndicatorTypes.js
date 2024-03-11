@@ -8,7 +8,6 @@ const searchIndicatorTypes = async (
   Logger
 ) => {
   try {
-    
     const types = fp.flow(
       fp.getOr([], 'body'),
       searchByTerm(term, selectedIndicatorType),
@@ -21,7 +20,7 @@ const searchIndicatorTypes = async (
         headers: { authorization: options.apiKey }
       })
     );
-    
+
     callback(null, { types });
   } catch (error) {
     Logger.error(
@@ -50,5 +49,5 @@ const searchByTerm = (term, selectedType) =>
       )(indicatorType) &&
       ((selectedType && selectedType.id !== indicatorType.id) || !selectedType)
   );
-  
+
 module.exports = searchIndicatorTypes;

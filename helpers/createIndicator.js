@@ -28,22 +28,13 @@ const createIndicator = async (
 
       noIndicatorReturnedOnCreationError.description =
         'No Indicator Returned On Creation';
-      
+
       throw noIndicatorReturnedOnCreationError;
     }
 
-    const newIndicator = fp.thru(
-      ({ firstSeen, lastSeen, ...indicator }) => ({
-        ...indicator,
-        firstSeen: moment(firstSeen).format('MMM D YY, h:mm A'),
-        lastSeen: moment(lastSeen).format('MMM D YY, h:mm A')
-      }),
-      newlyCreatedIndicator
-    );
-
     callback(null, {
-      newIndicator,
-      newSummary: createSummary([], [newIndicator], summary)
+      newIndicator: newlyCreatedIndicator,
+      newSummary: createSummary([], [newlyCreatedIndicator], summary, Logger)
     });
   } catch (error) {
     Logger.error(
@@ -95,14 +86,19 @@ const _createIndicatorRequest = (
   });
 
 const _getEntityType = ({ isIP, isHash, isDomain, isEmail }) =>
-  isIP ? 'ip' : 
-  isDomain ? 'domain' : 
-  isEmail ? 'email' : 
-  isHash && (
-    hashType === 'MD5' ? 'md5' : 
-    hashType === 'SHA1' ? 'sha1' : 
-    hashType === 'SHA256' ? 'sha256' : 
-    'otherHash'
-  ); 
+  isIP
+    ? 'ip'
+    : isDomain
+    ? 'domain'
+    : isEmail
+    ? 'email'
+    : isHash &&
+      (hashType === 'MD5'
+        ? 'md5'
+        : hashType === 'SHA1'
+        ? 'sha1'
+        : hashType === 'SHA256'
+        ? 'sha256'
+        : 'otherHash');
 
 module.exports = createIndicator;

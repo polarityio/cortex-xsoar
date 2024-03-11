@@ -1,5 +1,5 @@
-const _ = require("lodash");
-const Aigle = require("aigle");
+const _ = require('lodash');
+const Aigle = require('aigle');
 const _P = Aigle.mixin(_);
 
 const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) =>

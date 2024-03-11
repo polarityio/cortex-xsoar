@@ -1,5 +1,4 @@
 const { createSummary } = require('./formatDemistoResults');
-const { formatIncidentDate } = require('./formatDemistoResults');
 const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
 const { getOr, toNumber } = require('lodash/fp');
 
@@ -131,12 +130,11 @@ const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaul
     headers: {
       authorization: options.apiKey,
       'Content-type': 'application/json'
-    },
-  })
-    .catch((error) => {
-      Logger.error({ error }, 'Playbook Run Error');
-      throw error;
-    });
+    }
+  }).catch((error) => {
+    Logger.error({ error }, 'Playbook Run Error');
+    throw error;
+  });
 
 const _createContainerAndRunPlaybook = async (
   entityValue,
@@ -160,12 +158,10 @@ const _createContainerAndRunPlaybook = async (
       requestWithDefaults
     );
 
-    const newIncident = formatIncidentDate(newlyCreatedIncident);
-
-    await _startInvestigation(newIncident, options, requestWithDefaults);
+    await _startInvestigation(newlyCreatedIncident, options, requestWithDefaults);
 
     const { body: playbookRunHistory } = await _getPlaybookRunHistory(
-      newIncident,
+      newlyCreatedIncident,
       options,
       requestWithDefaults
     );
@@ -174,8 +170,8 @@ const _createContainerAndRunPlaybook = async (
 
     return {
       pbHistory: formattedPlaybookHistory,
-      newIncident,
-      newSummary: createSummary([newIncident], [], summary)
+      newIncident: newlyCreatedIncident,
+      newSummary: createSummary([newlyCreatedIncident], [], summary, Logger)
     };
   } catch (error) {
     Logger.error(error, 'Incident Creation or Playbook Run Error');

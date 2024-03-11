@@ -49,5 +49,5 @@ const searchByTerm = (term, selectedType) =>
       )(incidentType) &&
       ((selectedType && selectedType.id !== incidentType.id) || !selectedType)
   );
-  
+
 module.exports = searchIncidentTypes;

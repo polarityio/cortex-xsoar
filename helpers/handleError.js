@@ -56,6 +56,7 @@ const checkForInternalDemistoError = (response) => {
     const internalDemistoError = Error('Internal Demisto Query Error');
     internalDemistoError.status = 'internalDemistoError';
     internalDemistoError.description = `${error} -> ${detail}`;
+    internalDemistoError.detail = detail;
     throw internalDemistoError;
   }
   return response;

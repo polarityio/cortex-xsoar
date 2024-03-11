@@ -63,7 +63,7 @@ const createRequestWithDefaults = (Logger) => {
 
   const checkForStatusError = ({ statusCode, body }, requestOptions) => {
     Logger.trace({ statusCode, body, requestOptions });
-    
+
     checkForInternalDemistoError(body);
     const roundedStatus = Math.round(statusCode / 100) * 100;
     if (![200].includes(roundedStatus)) {
