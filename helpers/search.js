@@ -52,7 +52,9 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
       }
     }
   };
-  Logger.info({ requestOptions }, 'General Search Request Options');
+
+  Logger.trace({ requestOptions }, 'General Search Request Options');
+
   try {
     const response = await requestWithDefaults(requestOptions);
 
