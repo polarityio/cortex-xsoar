@@ -20,6 +20,17 @@
       </a>
     </li>
   {{/if}}
+  {{#if (gt evidence.length 0)}}
+    <li class="nav-item">
+      <a
+        {{action "changeTopTab" "evidence"}}
+              class="nav-link {{if (eq state.activeTab "evidence") "active"}}"
+              href="#"
+      >
+        Evidence ({{#if evidence}}{{evidence.length}}{{else}}0{{/if}})
+      </a>
+    </li>
+  {{/if}}
   {{#if block.userOptions.allowEvidenceSubmission}}
     <li class="nav-item">
       <a
@@ -32,7 +43,6 @@
     </li>
   {{/if}}
 </ul>
-
 
 {{#if (eq state.activeTab "indicators")}}
   <div class="mt-2">
@@ -49,7 +59,7 @@
           <span class="p-key">Status:</span>
           <span class="p-value">Polarity did not find this entity as an Indicator in Cortex XSOAR</span>
         </div>
-        <div class="view-in-ts create-in-phantom mt-1">
+        <div class="mt-1">
           <a class="p-link" href="{{baseUrl}}/indicators">Create Indicator in Cortex XSOAR Dashboard
             {{fa-icon "external-link-square" class="external-link-icon"}}</a>
         </div>
@@ -158,7 +168,7 @@
                       class="expandable-title good"
                 {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
               >
-                <span class="text good"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                <span class="text good"><span class="desc">Value:</span> {{indicator.name}}</span> {{fa-icon
                       "angle-up"}}
               </a>
             {{else}}
@@ -168,7 +178,7 @@
                         class="expandable-title suspicious"
                   {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                 >
-                  <span class="text suspicious"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                  <span class="text suspicious"><span class="desc">Value:</span> {{indicator.name}}</span> {{fa-icon
                         "angle-up"}}
                 </a>
               {{else}}
@@ -178,7 +188,7 @@
                           class="expandable-title bad"
                     {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                   >
-                    <span class="text bad"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                    <span class="text bad"><span class="desc">Value:</span> {{indicator.name}}</span> {{fa-icon
                           "angle-up"}}
                   </a>
                 {{else}}
@@ -187,7 +197,7 @@
                           class="expandable-title none"
                     {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                   >
-                    <span class="text none"><span class="desc">Value:</span> {{indicator.value}}</span> {{fa-icon
+                    <span class="text none"><span class="desc">Value:</span> {{indicator.name}}</span> {{fa-icon
                           "angle-up"}}
                   </a>
                 {{/if}}
@@ -247,7 +257,7 @@
                       class="expandable-title good"
                 {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
               >
-                <span class="text good">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                <span class="text good">{{indicator.name}}</span> {{fa-icon "angle-down"}}
               </a>
             {{else}}
               {{#if (eq indicator.score 2)}}
@@ -256,7 +266,7 @@
                         class="expandable-title suspicious"
                   {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                 >
-                  <span class="text suspicious">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                  <span class="text suspicious">{{indicator.name}}</span> {{fa-icon "angle-down"}}
                 </a>
               {{else}}
                 {{#if (eq indicator.score 3)}}
@@ -265,7 +275,7 @@
                           class="expandable-title bad"
                     {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                   >
-                    <span class="text bad">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                    <span class="text bad">{{indicator.name}}</span> {{fa-icon "angle-down"}}
                   </a>
                 {{else}}
                   <a
@@ -273,7 +283,7 @@
                           class="expandable-title none"
                     {{on "click" (action "toggleExpandableTitle" indicatorIndex)}}
                   >
-                    <span class="text none">{{indicator.value}}</span> {{fa-icon "angle-down"}}
+                    <span class="text none">{{indicator.name}}</span> {{fa-icon "angle-down"}}
                   </a>
                 {{/if}}
               {{/if}}
@@ -296,7 +306,7 @@
         Status: <b>Polarity did not find this entity as an Incident in Cortex XSOAR</b>
       </p>
 
-      <div class="view-in-ts create-in-phantom mt-1">
+      <div class="mt-1">
         <a class="p-link" href="{{baseUrl}}/incidents">Create Incident in Cortex XSOAR Dashboard
           {{fa-icon "external-link-square" class="external-link-icon"}}</a>
       </div>
@@ -626,6 +636,47 @@
         {{/if}}
       {{/each}}
     {{/if}}
+  </div>
+{{/if}}
+
+{{#if (eq state.activeTab "evidence")}}
+  <div class="mt-2">
+    {{#each evidence as | result |}}
+      <h1 class="p-title">
+        {{fa-icon icon="puzzle-piece" fixedWidth=true}} Evidence
+        <a class="p-link ml-1" href="{{baseUrl}}/artifactViewer/{{result.incidentId}}/{{result.id}}">
+          {{result.id}}
+        </a>
+        <span class="ml-1">for Incident</span>
+        <a class="p-link ml-1" href="{{baseUrl}}/EvidenceBoard/{{result.incidentId}}">
+          #{{result.incidentId}}
+        </a>
+      </h1>
+      <div class="mt-2 evidence-description">{{result.description}}</div>
+      <div class="mt-1">
+        <span class="p-key">Occurred:</span>
+        <span class="p-value">{{moment-format result.occurred "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+      </div>
+      <div>
+        <span class="p-key">Fetched:</span>
+        <span class="p-value">{{moment-format result.fetched "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+      </div>
+      <div>
+        <span class="p-key">Marked Date:</span>
+        <span class="p-value">{{moment-format result.markedDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+      </div>
+      <div>
+        <span class="p-key">Submitter:</span>
+        <span class="p-value">{{result.markedBy}}</span>
+      </div>
+      {{#if (gt result.tags.length 0)}}
+        <div class="mt-1">
+          {{#each result.tags as | tag |}}
+            <span class="p-tag">{{tag}}</span>
+          {{/each}}
+        </div>
+      {{/if}}
+    {{/each}}
   </div>
 {{/if}}
 

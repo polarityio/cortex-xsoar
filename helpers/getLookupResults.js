@@ -6,6 +6,7 @@ const { _partitionFlatMap } = require('./dataTransformations');
 const getPlaybooksByEntityGroup = require('./getPlaybooksByEntityGroup');
 const queryIncidents = require('./queryIncidents');
 const queryIndicators = require('./queryIndicators');
+const search = require('./search');
 const {
   getPlaybookRunHistoryForIncidents
 } = require('./getPlaybookRunHistoryForIncidents');
@@ -24,22 +25,10 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
         Logger
       );
 
-      const incidents = await queryIncidents(
-        entitiesPartition,
-        options,
-        requestWithDefaults,
-        Logger
-      );
+      const searchResults = await search(entitiesPartition, options, requestWithDefaults);
 
       const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
-        incidents,
-        options,
-        requestWithDefaults,
-        Logger
-      );
-
-      const indicators = await queryIndicators(
-        entitiesPartition,
+        searchResults.incidents,
         options,
         requestWithDefaults,
         Logger
@@ -48,7 +37,8 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
       const lookupResults = formatDemistoResults(
         entityGroupsWithPlaybooks,
         incidentsWithPlaybookRunHistory,
-        indicators,
+        searchResults.indicators,
+        searchResults.evidence,
         options,
         Logger
       );
