@@ -8,6 +8,7 @@ polarity.export = PolarityComponent.extend({
   summary: Ember.computed.alias('block.data.summary'),
   incidents: Ember.computed.alias('details.incidents'),
   indicators: Ember.computed.alias('details.indicators'),
+  evidence: Ember.computed.alias('details.evidence'),
   playbooks: Ember.computed.alias('details.playbooks'),
   allowIncidentCreation: Ember.computed.alias('block.userOptions.allowIncidentCreation'),
   allowIndicatorCreation: Ember.computed.alias(
@@ -56,6 +57,8 @@ polarity.export = PolarityComponent.extend({
         this.set('state.activeTab', 'indicators');
       } else if (this.get('incidents.length')) {
         this.set('state.activeTab', 'incidents');
+      } else if (this.get('evidence.length')) {
+        this.set('state.activeTab', 'evidence');
       } else if (this.get('allowIndicatorCreation')) {
         this.set('state.activeTab', 'indicators');
       } else {

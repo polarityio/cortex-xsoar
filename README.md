@@ -5,7 +5,15 @@
 
 ![image](https://img.shields.io/badge/status-beta-green.svg)
 
-Polarity's Cortex XSOAR integration searches Cortex XSOAR Incidents and Indicators.  It also supports creating incidents from entities, and allows a user to execute pre-defined playbooks from the Polarity Overlay Window.  Additionally, user's can submit data from other Polarity integrations as evidence for an Incident.  Finally, the integration supports creating indicators from the Overlay Window.
+Polarity's Cortex XSOAR integration searches Cortex XSOAR Incidents, Indicators, and Evidence.  It also supports creating incidents from entities, and allows a user to execute pre-defined playbooks from the Polarity Overlay Window.  Additionally, user's can submit data from other Polarity integrations as evidence for an Incident.  Finally, the integration supports creating indicators from the Overlay Window.
+
+## Search
+
+In order to prevent too many false positives, the integration supports exact match searching of indicators against Incidents, Indicators, and Evidence.
+
+As an example, if you run a search on the domain "mail.com", the integration will return Indicator results for the Domain "mail.com" but will not return Email results for "user@mail.com".  
+
+When searching Evidence, the Cortex XSOAR REST API supports searching the Evidence "description" field.  When searching Incidents, matches are made against the Incident Name as well as Incident Labels.
 
 
 ## Indicator and Incident View with Playbook History

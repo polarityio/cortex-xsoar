@@ -12,6 +12,7 @@ const formatDemistoResults = (
   entityGroupsWithPlaybooks,
   incidentsWithPlaybookRunHistory,
   indicators,
+  evidence,
   options,
   Logger
 ) =>
@@ -23,7 +24,19 @@ const formatDemistoResults = (
           entity
         );
 
-        const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
+        const evidenceForThisEntity = getEvidenceForThisEntity(evidence, entity);
+
+        const indicatorsForThisEntity = getIndicatorsForThisEntity(
+          indicators,
+          entity
+        ).map((indicator) => {
+          if (Array.isArray(indicator.comments)) {
+            indicator.comments = indicator.comments.filter(
+              (comment) => comment.type === 'IndicatorCommentRegular'
+            );
+          }
+          return indicator;
+        });
 
         const allowIncidentCreation =
           entity.requestContext.requestType === 'OnDemand' &&
@@ -34,6 +47,7 @@ const formatDemistoResults = (
               entity,
               incidentsForThisEntity,
               indicatorsForThisEntity,
+              evidenceForThisEntity,
               playbooks,
               options,
               Logger
@@ -42,6 +56,7 @@ const formatDemistoResults = (
           ? _formatNoIncidentFoundResults(
               entity,
               indicatorsForThisEntity,
+              evidenceForThisEntity,
               playbooks,
               allowIncidentCreation,
               options,
@@ -70,24 +85,46 @@ const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
   );
 
 const getIndicatorsForThisEntity = (indicators, entity) =>
-  fp.filter(({ value }) => fp.toLower(value) === fp.toLower(entity.value), indicators);
+  fp.filter(({ name }) => fp.toLower(name) === fp.toLower(entity.value), indicators);
+
+/**
+ * Evidence Search only searches the description field of a piece of evidence so we look for the entity value in
+ * the description field only.
+ *
+ * @param indicators
+ * @param entity
+ * @returns {{readonly description?: *}[]}
+ */
+const getEvidenceForThisEntity = (indicators, entity) =>
+  fp.filter(
+    ({ description }) => fp.toLower(description).includes(fp.toLower(entity.value)),
+    indicators
+  );
 
 const _formatFoundIncidentResults = (
   entity,
   incidentsForThisEntity,
   indicatorsForThisEntity,
+  evidenceForThisEntity,
   playbooks,
   options,
   Logger
 ) => ({
   entity,
   data: {
-    summary: createSummary(incidentsForThisEntity, indicatorsForThisEntity, [], Logger),
+    summary: createSummary(
+      incidentsForThisEntity,
+      indicatorsForThisEntity,
+      evidenceForThisEntity,
+      [],
+      Logger
+    ),
     details: {
       playbooks,
       incidents: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, incidentsForThisEntity),
       indicators: indicatorsForThisEntity,
-      baseUrl: `${options.url}/#`
+      baseUrl: `${options.url}/#`,
+      evidence: evidenceForThisEntity
     }
   }
 });
@@ -95,6 +132,7 @@ const _formatFoundIncidentResults = (
 const _formatNoIncidentFoundResults = (
   entity,
   indicatorsForThisEntity,
+  evidenceForThisEntity,
   playbooks,
   allowIncidentCreation,
   options,
@@ -106,7 +144,7 @@ const _formatNoIncidentFoundResults = (
     summary: [
       'No Incident Found',
       ...(indicatorsForThisEntity.length
-        ? createSummary([], indicatorsForThisEntity, [], Logger)
+        ? createSummary([], indicatorsForThisEntity, evidenceForThisEntity, [], Logger)
         : ['No Indicators Found'])
     ],
     details: {
@@ -114,7 +152,8 @@ const _formatNoIncidentFoundResults = (
       onDemand: true,
       baseUrl: `${options.url}/#`,
       allowIncidentCreation,
-      indicators: indicatorsForThisEntity
+      indicators: indicatorsForThisEntity,
+      evidence: evidenceForThisEntity
     }
   }
 });
@@ -122,6 +161,7 @@ const _formatNoIncidentFoundResults = (
 const createSummary = (
   incidentsForThisEntity,
   indicatorsForThisEntity,
+  evidenceForThisEntity,
   previousSummary = [],
   Logger
 ) => {
@@ -162,6 +202,9 @@ const createSummary = (
 
   const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
+  const evidence =
+    evidenceForThisEntity.length > 0 ? [`Evidence: ${evidenceForThisEntity.length}`] : [];
+
   const summary = [
     ...types,
     ...(incidentsForThisEntity.length &&
@@ -182,7 +225,8 @@ const createSummary = (
           }`
         ]
       : []),
-    ...indicatorDates
+    ...indicatorDates,
+    ...evidence
   ];
 
   return fp.flow(fp.concat(previousSummary), fp.uniq, fp.compact)(summary);
