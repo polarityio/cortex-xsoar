@@ -3,7 +3,7 @@ module.exports = {
   acronym: 'CX',
   description:
     'Cortex XSOAR provides automation and security orchestration capabilities.',
-  entityTypes: ['IPv4', 'IPv6', 'hash', 'domain', 'email'],
+  entityTypes: ['IPv4', 'IPv6', 'MD5', 'SHA1', 'SHA256', 'domain', 'email'],
   styles: ['./styles/styles.less'],
   onDemandOnly: true,
   defaultColor: 'light-purple',
