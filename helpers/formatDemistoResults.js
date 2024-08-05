@@ -52,7 +52,9 @@ const formatDemistoResults = (
               options,
               Logger
             )
-          : indicatorsForThisEntity.length || allowIncidentCreation
+          : indicatorsForThisEntity.length ||
+            allowIncidentCreation ||
+            evidenceForThisEntity.length > 0
           ? _formatNoIncidentFoundResults(
               entity,
               indicatorsForThisEntity,
@@ -143,9 +145,8 @@ const _formatNoIncidentFoundResults = (
   data: {
     summary: [
       'No Incident Found',
-      ...(indicatorsForThisEntity.length
-        ? createSummary([], indicatorsForThisEntity, evidenceForThisEntity, [], Logger)
-        : ['No Indicators Found'])
+      ...(indicatorsForThisEntity.length === 0 ? ['No Indicators Found'] : []),
+      ...createSummary([], indicatorsForThisEntity, evidenceForThisEntity, [], Logger)
     ],
     details: {
       playbooks,
@@ -214,7 +215,7 @@ const createSummary = (
       : []),
     ...(indicatorsForThisEntity.length
       ? [
-          `Reputatation: ${
+          `Reputation: ${
             score === 1
               ? 'Good'
               : score === 2
