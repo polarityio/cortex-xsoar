@@ -203,13 +203,22 @@
                 {{/if}}
               {{/if}}
             {{/if}}
-
-            {{#if indicator.indicator_type}}
+            <div class="work-plan-link">
+              <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
+                View in Cortex XSOAR
+                {{fa-icon "external-link-square" class="external-link-icon"}}
+              </a>
+            </div>
+            {{#if indicator.type}}
               <div>
                 <span class="p-key">Type:</span>
-                <span class="p-value">{{indicator.indicator_type}}</span>
+                <span class="p-value">{{indicator.type}}</span>
               </div>
             {{/if}}
+            <div>
+              <span class="p-key">Status:</span>
+              <span class="p-value">{{capitalize indicator.expirationStatus}}</span>
+            </div>
             <div>
               <span class="p-key">Reputation:</span>
               <span class="p-value"><em>
@@ -244,12 +253,32 @@
                 <span class="p-value">{{moment-format indicator.lastSeen "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
               </div>
             {{/if}}
-            <div class="work-plan-link">
-              <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
-                Show in Cortex XSOAR
-                {{fa-icon "external-link-square" class="external-link-icon"}}
-              </a>
-            </div>
+            {{#if indicator.CustomFields.trafficlightprotocol}}
+              <div>
+                <span class="p-key">TLP:</span>
+                <span class="p-value">{{indicator.CustomFields.trafficlightprotocol}}</span>
+              </div>
+            {{/if}}
+            {{#if (gt indicator.comments.length 0)}}
+              <h1 class="p-title">{{fa-icon icon="comments" fixedWidth=true}} Comments</h1>
+              {{#each indicator.comments as | comment |}}
+                <div class="comment-block">
+                  <div class="d-flex align-items-center justify-content-between comment-title">
+                    <div>{{comment.user}}</div>
+                    <div>{{moment-format comment.created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</div>
+                  </div>
+                  <div class="comment-content">{{comment.content}}</div>
+                </div>
+              {{/each}}
+            {{/if}}
+            {{#if (gt indicator.CustomFields.tags.length 0)}}
+              <h1 class="p-title">{{fa-icon icon="tag" fixedWidth=true}} Tags</h1>
+              <div class="mt-1">
+                {{#each indicator.CustomFields.tags as | tag |}}
+                  <span class="p-tag">{{tag}}</span>
+                {{/each}}
+              </div>
+            {{/if}}
           {{else}}
             {{#if (eq indicator.score 1)}}
               <a

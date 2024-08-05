@@ -26,7 +26,17 @@ const formatDemistoResults = (
 
         const evidenceForThisEntity = getEvidenceForThisEntity(evidence, entity);
 
-        const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity);
+        const indicatorsForThisEntity = getIndicatorsForThisEntity(
+          indicators,
+          entity
+        ).map((indicator) => {
+          if (Array.isArray(indicator.comments)) {
+            indicator.comments = indicator.comments.filter(
+              (comment) => comment.type === 'IndicatorCommentRegular'
+            );
+          }
+          return indicator;
+        });
 
         const allowIncidentCreation =
           entity.requestContext.requestType === 'OnDemand' &&
@@ -192,7 +202,8 @@ const createSummary = (
 
   const types = uniqFlatMap(({ type }) => type && `Type: ${type}`);
 
-  const evidence = evidenceForThisEntity.length > 0 ? [`Evidence: ${evidenceForThisEntity.length}`] : [];
+  const evidence =
+    evidenceForThisEntity.length > 0 ? [`Evidence: ${evidenceForThisEntity.length}`] : [];
 
   const summary = [
     ...types,
