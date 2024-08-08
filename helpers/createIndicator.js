@@ -34,7 +34,7 @@ const createIndicator = async (
 
     callback(null, {
       newIndicator: newlyCreatedIndicator,
-      newSummary: createSummary([], [newlyCreatedIndicator], summary, Logger)
+      newSummary: createSummary([], [newlyCreatedIndicator], [], summary, Logger)
     });
   } catch (error) {
     Logger.error(

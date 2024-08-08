@@ -6,7 +6,9 @@
   "entityTypes": [
     "IPv4",
     "IPv6",
-    "hash",
+    "MD5",
+    "SHA1",
+    "SHA256",
     "domain",
     "email"
   ],
