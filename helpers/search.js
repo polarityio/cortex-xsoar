@@ -40,7 +40,7 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
   const Logger = getLogger();
 
   const requestOptions = {
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}search`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}search`,
     method: 'POST',
     json: true,
     headers: {

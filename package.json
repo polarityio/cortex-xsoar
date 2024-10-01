@@ -1,6 +1,6 @@
 {
   "name": "cortex-xsoar",
-  "version": "3.3.0",
+  "version": "3.3.0+1",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",

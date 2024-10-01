@@ -65,7 +65,7 @@ const _createIndicatorRequest = (
   requestWithDefaults
 ) =>
   requestWithDefaults({
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}indicator/create`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}indicator/create`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,

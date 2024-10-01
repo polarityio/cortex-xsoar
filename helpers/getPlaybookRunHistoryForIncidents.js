@@ -27,7 +27,7 @@ const getPlaybookRunHistoryForIncidents = (
 
 const getPlaybookRunHistory = async (incident, options, Logger, requestWithDefaults) => {
   const { body: playbookRunHistory } = await requestWithDefaults({
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${incident.id}`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${incident.id}`,
     method: 'GET',
     headers: {
       authorization: options.apiKey,

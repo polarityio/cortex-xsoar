@@ -23,6 +23,12 @@ const startup = (logger) => {
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
+  
+  // This is a v6 server so the apiUrl is just the normal app url
+  options.apiUrl = options.apiUrl.length === 0 ? options.url : options.apiUrl;
+  options.apiUrl = options.apiUrl.endsWith('/')
+    ? options.apiUrl.slice(0, -1)
+    : options.apiUrl;
 
   let lookupResults;
   try {

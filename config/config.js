@@ -37,12 +37,32 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'apiUrl',
+      name: 'Cortex v8 API URL',
+      description:
+        'The API URL for the Cortex v8 XSOAR API which should include the schema (i.e., https://).  This value is only required if you are authenticating to Cortex v8.  The API URL format will be `https://api-{fqdn}` and can be copied directly from the v8 API Keys settings page.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'apiKey',
       name: 'API Key',
       description:
         'A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings',
       default: '',
       type: 'password',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'apiKeyId',
+      name: 'Cortex v8 API Key ID',
+      description:
+        'A valid Cortex v8 XSOAR API Key ID which can be found in your Cortex XSOAR API Keys Table.  This value is only required if you are authenticating to Cortex v8.',
+      default: '',
+      type: 'text',
       userCanEdit: false,
       adminOnly: true
     },
@@ -70,11 +90,11 @@ module.exports = {
       key: 'allowEvidenceSubmission',
       name: 'Allow Evidence Submission',
       description:
-          'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
+        'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
       default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
-    },
+    }
   ]
 };

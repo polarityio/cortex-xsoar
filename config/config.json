@@ -39,7 +39,16 @@
     {
       "key": "url",
       "name": "URL",
-      "description": "The base URL for the Cortex XSOAR API which should include the schema (i.e., https://)",
+      "description": "The base URL for the Cortex XSOAR instance which should include the schema (i.e., https://).  For v6 and v8 servers you should provide the URL to your Cortex web application.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "apiUrl",
+      "name": "Cortex v8 API URL",
+      "description": "The API URL for the Cortex v8 XSOAR API which should include the schema (i.e., https://).  This value is only required if you are authenticating to Cortex v8.  The API URL format will be `https://api-{fqdn}` and can be copied directly from the v8 API Keys settings page.",
       "default": "",
       "type": "text",
       "userCanEdit": false,

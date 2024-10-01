@@ -125,7 +125,7 @@ const _runPlaybookOnExistingIncident = async (
 
 const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/${
+    url: `${options.apiUrl}/${
       options.apiKeyId.length > 0 ? 'xsoar/' : ''
     }inv-playbook/new/${playbookId}/${incidentId}`,
     method: 'POST',
@@ -192,7 +192,7 @@ const _createIncidentAndRunPlaybook = (
   requestWithDefaults
 ) =>
   requestWithDefaults({
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}incident`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}incident`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
@@ -216,7 +216,7 @@ const _createIncidentAndRunPlaybook = (
 
 const _startInvestigation = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/${
+    url: `${options.apiUrl}/${
       options.apiKeyId.length > 0 ? 'xsoar/' : ''
     }incident/investigate`,
     method: 'POST',
@@ -233,7 +233,7 @@ const _startInvestigation = (newIncident, options, requestWithDefaults) =>
 
 const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${
       newIncident.id
     }`,
     method: 'GET',

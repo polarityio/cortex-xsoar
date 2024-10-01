@@ -86,7 +86,7 @@ async function addIntegrationDataToEntry(
   options
 ) {
   let requestOptions = {
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}entry/formatted`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}entry/formatted`,
     method: 'POST',
     json: true,
     headers: {
@@ -114,7 +114,7 @@ async function addEvidence(
   options
 ) {
   const requestOptions = {
-    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}evidence`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}evidence`,
     method: 'POST',
     json: true,
     headers: {

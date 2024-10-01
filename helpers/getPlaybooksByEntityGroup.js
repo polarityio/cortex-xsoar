@@ -22,7 +22,7 @@ const _getPlaybooksForEntityType =
     const {
       body: { playbooks }
     } = await requestWithDefaults({
-      url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/public/v1/' : ''}playbook/search`,
+      url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/public/v1/' : ''}playbook/search`,
       method: 'POST',
       headers: {
         authorization: options.apiKey,
