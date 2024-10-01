@@ -15,9 +15,9 @@ const searchIncidentTypes = async (
       fp.slice(0, 50)
     )(
       await requestWithDefaults({
-        url: `${options.url}/incidenttype`,
+        url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}incidenttype`,
         method: 'GET',
-        headers: { authorization: options.apiKey }
+        headers: { authorization: options.apiKey, 'x-xdr-auth-id': options.apiKeyId }
       })
     );
 

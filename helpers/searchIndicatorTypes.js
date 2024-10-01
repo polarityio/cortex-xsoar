@@ -15,9 +15,9 @@ const searchIndicatorTypes = async (
       fp.slice(0, 50)
     )(
       await requestWithDefaults({
-        url: `${options.url}/reputation`,
+        url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}reputation`,
         method: 'GET',
-        headers: { authorization: options.apiKey }
+        headers: { authorization: options.apiKey, 'x-xdr-auth-id': options.apiKeyId }
       })
     );
 

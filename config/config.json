@@ -55,6 +55,15 @@
       "adminOnly": true
     },
     {
+      "key": "apiKeyId",
+      "name": "Cortex v8 API Key ID",
+      "description": "A valid Cortex v8 XSOAR API Key ID which can be found in your Cortex XSOAR API Keys Table.  This value is only required if you are authenticating to Cortex v8.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
       "key": "allowIndicatorCreation",
       "name": "Allow Indicator Creation",
       "description": "If checked, users will be able to create Indicators when searching On Demand if there are none currently existing for your searched entity. This setting must be visible to all users.",

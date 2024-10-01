@@ -125,10 +125,13 @@ const _runPlaybookOnExistingIncident = async (
 
 const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
+    url: `${options.url}/${
+      options.apiKeyId.length > 0 ? 'xsoar/' : ''
+    }inv-playbook/new/${playbookId}/${incidentId}`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
   }).catch((error) => {
@@ -189,10 +192,11 @@ const _createIncidentAndRunPlaybook = (
   requestWithDefaults
 ) =>
   requestWithDefaults({
-    url: `${options.url}/incident`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}incident`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: {
@@ -212,10 +216,13 @@ const _createIncidentAndRunPlaybook = (
 
 const _startInvestigation = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/incident/investigate`,
+    url: `${options.url}/${
+      options.apiKeyId.length > 0 ? 'xsoar/' : ''
+    }incident/investigate`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: {
@@ -226,10 +233,13 @@ const _startInvestigation = (newIncident, options, requestWithDefaults) =>
 
 const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/inv-playbook/${newIncident.id}`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${
+      newIncident.id
+    }`,
     method: 'GET',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
   });

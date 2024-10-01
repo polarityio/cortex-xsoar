@@ -27,10 +27,11 @@ const getPlaybookRunHistoryForIncidents = (
 
 const getPlaybookRunHistory = async (incident, options, Logger, requestWithDefaults) => {
   const { body: playbookRunHistory } = await requestWithDefaults({
-    url: `${options.url}/inv-playbook/${incident.id}`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${incident.id}`,
     method: 'GET',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
   }).catch((error) => {

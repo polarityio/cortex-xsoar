@@ -86,11 +86,12 @@ async function addIntegrationDataToEntry(
   options
 ) {
   let requestOptions = {
-    url: `${options.url}/entry/formatted`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}entry/formatted`,
     method: 'POST',
     json: true,
     headers: {
-      authorization: options.apiKey
+      authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId
     },
     body: {
       // This value must be an escape JSON string
@@ -113,11 +114,12 @@ async function addEvidence(
   options
 ) {
   const requestOptions = {
-    url: `${options.url}/evidence`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}evidence`,
     method: 'POST',
     json: true,
     headers: {
-      authorization: options.apiKey
+      authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId
     },
     body: {
       entryId: warRoomDataId,

@@ -10,10 +10,11 @@ const queryIndicators = async (
   const {
     body: { iocObjects: indicators }
   } = await requestWithDefaults({
-    url: `${options.url}/indicators/search`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/public/v1/' : ''}indicators/search`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: { query }

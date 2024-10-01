@@ -8,11 +8,12 @@ const queryIncidents = async (
 ) => {
   const query = entitiesPartition.map((entity) => `"${entity.value}"`).join(' OR ');
   const requestOptions = {
-    url: `${options.url}/incidents/search`,
+    url: `${options.url}/${options.apiKeyId.length > 0 ? 'xsoar/public/v1/' : ''}incidents/search`,
     method: 'POST',
     json: true,
     headers: {
-      authorization: options.apiKey
+      authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId
     },
     body: {
       filter: {
