@@ -125,7 +125,7 @@ const _formatFoundIncidentResults = (
       playbooks,
       incidents: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, incidentsForThisEntity),
       indicators: indicatorsForThisEntity,
-      baseUrl: `${options.url}/#`,
+      baseUrl: `${options.url}${options.apiKeyId.length > 0 ? '' : '/#'}`,
       evidence: evidenceForThisEntity
     }
   }
@@ -151,7 +151,7 @@ const _formatNoIncidentFoundResults = (
     details: {
       playbooks,
       onDemand: true,
-      baseUrl: `${options.url}/#`,
+      baseUrl: `${options.url}${options.apiKeyId.length > 0 ? '' : '/#'}`,
       allowIncidentCreation,
       indicators: indicatorsForThisEntity,
       evidence: evidenceForThisEntity
