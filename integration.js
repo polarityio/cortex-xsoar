@@ -23,7 +23,7 @@ const startup = (logger) => {
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
-  
+
   // This is a v6 server so the apiUrl is just the normal app url
   options.apiUrl = options.apiUrl.length === 0 ? options.url : options.apiUrl;
   options.apiUrl = options.apiUrl.endsWith('/')
@@ -39,8 +39,9 @@ const doLookup = async (entities, options, cb) => {
       Logger
     );
   } catch (error) {
-    Logger.error({ error }, 'Get Lookup Results Failed');
-    return cb(handleError(error));
+    const handledError = handleError(error);
+    Logger.error({ handledError }, 'Get Lookup Results Failed');
+    return cb(handledError);
   }
 
   Logger.trace({ lookupResults }, 'Lookup Results');

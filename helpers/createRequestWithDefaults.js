@@ -61,7 +61,7 @@ const createRequestWithDefaults = (Logger) => {
     };
   };
 
-  const checkForStatusError = ({ statusCode, body }, requestOptions) => {
+  const checkForStatusError = ({ statusCode, body, request }, requestOptions) => {
     Logger.trace({ statusCode, body, requestOptions }, 'checkForStatusError');
 
     checkForInternalDemistoError(body);
@@ -70,12 +70,21 @@ const createRequestWithDefaults = (Logger) => {
       const requestError = Error('Request Error');
       requestError.status = statusCode;
       requestError.description = body;
-      requestError.requestOptions = requestOptions;
+      requestError.body = body;
+      requestError.requestOptions = sanitizeRequest(requestOptions);
+      requestError.request = sanitizeRequest(request);
       throw requestError;
     }
   };
 
   return requestWithDefaults();
 };
+
+function sanitizeRequest(request) {
+  if (request && request.headers && request.headers.authorization) {
+    request.headers.authorization = `********`;
+  }
+  return request;
+}
 
 module.exports = createRequestWithDefaults;
