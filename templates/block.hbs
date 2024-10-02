@@ -203,12 +203,14 @@
                 {{/if}}
               {{/if}}
             {{/if}}
-            <div class="work-plan-link">
-              <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
-                View in Cortex XSOAR
-                {{fa-icon "external-link-square" class="external-link-icon"}}
-              </a>
-            </div>
+            {{#if block.userOptions.enableThreatIntelligenceManagement}}
+              <div class="work-plan-link">
+                <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
+                  View in Cortex XSOAR
+                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                </a>
+              </div>
+            {{/if}}
             {{#if indicator.type}}
               <div>
                 <span class="p-key">Type:</span>
