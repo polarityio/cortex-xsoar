@@ -53,7 +53,6 @@ polarity.export = PolarityComponent.extend({
       this.set('block._state', {});
       this.set('state.missingIncidentId', false);
       this.set('state.missingIntegrations', false);
-
       if (this.get('indicators.length')) {
         this.set('state.activeTab', 'indicators');
       } else if (this.get('incidents.length')) {
@@ -65,6 +64,18 @@ polarity.export = PolarityComponent.extend({
       } else {
         this.set('state.activeTab', 'incidents');
       }
+    }
+
+    if (
+      this.get('state.activeTab') === 'incidents' &&
+      this.get('playbooksByEntityTypeLoaded') === false
+    ) {
+      this.set('loadingPlaybooksByEntityType', true);
+      this.getPlaybooksByEntityType().then(() => {
+        this.set('playbooksByEntityTypeLoaded', true);
+      }).finally(() => {
+        this.set('loadingPlaybooksByEntityType', false);
+      });
     }
 
     this._super(...arguments);
@@ -145,9 +156,8 @@ polarity.export = PolarityComponent.extend({
         resolve();
       });
   },
-  getPlaybooksByEntityType: function (incidentIndex) {
+  getPlaybooksByEntityType: function () {
     return new Ember.RSVP.Promise((resolve, reject) => {
-      this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, true);
       const payload = {
         action: 'getPlaybooksByEntityType',
         data: {
@@ -172,7 +182,6 @@ polarity.export = PolarityComponent.extend({
           reject();
         })
         .finally(() => {
-          this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, false);
           setTimeout(() => {
             if (!this.isDestroyed) {
               this.setMessage(null, '');
@@ -186,7 +195,7 @@ polarity.export = PolarityComponent.extend({
   getPlaybookRunHistoryForIncident: function (incidentIndex) {
     return new Ember.RSVP.Promise((resolve, reject) => {
       this.set(`incidents.${incidentIndex}.__playbookRunHistoryLoading`, true);
-      const incidentId = this.get(`incidents.${incidentIndex}.id`);
+      const incidentId = this.get(`incidents.${incidentIndex}.incident.id`);
       const payload = {
         action: 'getPlaybookRunHistoryForIncident',
         data: {
@@ -196,7 +205,7 @@ polarity.export = PolarityComponent.extend({
 
       this.sendIntegrationMessage(payload)
         .then((result) => {
-          this.set(`incidents.${incidentIndex}.pbHistory`, result.pbHistory);
+          this.set(`incidents.${incidentIndex}.incident.pbHistory`, result.pbHistory);
           resolve();
         })
         .catch((err) => {
@@ -224,8 +233,10 @@ polarity.export = PolarityComponent.extend({
   actions: {
     getPlaybooksByEntityType: function (incidentIndex) {
       if (this.get('playbooksByEntityTypeLoaded') === false) {
+        this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, true);
         return this.getPlaybooksByEntityType(incidentIndex).then(() => {
           this.set('playbooksByEntityTypeLoaded', true);
+          this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, false);
         });
       }
     },
@@ -273,7 +284,16 @@ polarity.export = PolarityComponent.extend({
       if (tabName === 'write' && !Array.isArray(this.get('state.integrations'))) {
         this.setIntegrationSelection();
       }
+      if (tabName === 'incidents' && this.get('playbooksByEntityTypeLoaded') === false) {
+        this.set('loadingPlaybooksByEntityType', true);
+        return this.getPlaybooksByEntityType().then(() => {
+          this.set('playbooksByEntityTypeLoaded', true);
+        }).finally(() => {
+          this.set('loadingPlaybooksByEntityType', false);
+        });
+      }
     },
+
     refreshIntegrations: function () {
       this.set('state.spinRefresh', true);
       this.setIntegrationSelection();
@@ -482,7 +502,7 @@ polarity.export = PolarityComponent.extend({
     this.set('summary', tags);
   },
   setPlaybookRunHistory(incidentIndex, pbHistory) {
-    this.set(`incidents.${incidentIndex}.pbHistory`, pbHistory);
+    this.set(`incidents.${incidentIndex}.incident.pbHistory`, pbHistory);
   },
   setIncident(newIncident) {
     this.set(`incidents`, [newIncident]);

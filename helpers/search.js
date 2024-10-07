@@ -64,17 +64,29 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
         switch (result.type) {
           case 'incident':
             if (result.incidentResult && result.incidentResult.incident) {
-              accum.incidents.push(result.incidentResult.incident);
+              accum.incidents.push({
+                highlights: result.incidentResult.highlights,
+                highlightsAsString: JSON.stringify(result.incidentResult.highlights).toLowerCase(),
+                incident: result.incidentResult.incident
+              });
             }
             break;
           case 'evidence':
             if (result.evidenceResult && result.evidenceResult.evidence) {
-              accum.evidence.push(result.evidenceResult.evidence);
+              accum.evidence.push({
+                highlights: result.evidenceResult.highlights,
+                highlightsAsString: JSON.stringify(result.evidenceResult.highlights).toLowerCase(),
+                evidence: result.evidenceResult.evidence
+              });
             }
             break;
           case 'indicator':
             if (result.insightResult && result.insightResult.insight) {
-              accum.indicators.push(result.insightResult.insight);
+              accum.indicators.push({
+                highlights: result.insightResult.highlights,
+                highlightsAsString: JSON.stringify(result.insightResult.highlights).toLowerCase(),
+                indicator: result.insightResult.insight
+              });
             }
             break;
         }

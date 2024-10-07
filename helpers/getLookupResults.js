@@ -14,6 +14,8 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
 
       const searchResults = await search(entitiesPartition, options, requestWithDefaults);
 
+      Logger.trace({ searchResults }, 'Search Results');
+
       const lookupResults = formatDemistoResults(
         entities,
         searchResults.incidents,

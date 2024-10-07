@@ -10,7 +10,9 @@ const runPlaybook = require('./helpers/runPlaybook');
 const searchIndicatorTypes = require('./helpers/searchIndicatorTypes');
 const searchIncidentTypes = require('./helpers/searchIncidentTypes');
 const writeToIncident = require('./helpers/writeToIncident');
-const { getPlaybookRunHistoryForIncident } = require('./helpers/getPlaybookRunHistoryForIncident');
+const {
+  getPlaybookRunHistoryForIncident
+} = require('./helpers/getPlaybookRunHistoryForIncident');
 const getPlaybooksByEntityType = require('./helpers/getPlaybooksByEntityType');
 
 let Logger;
@@ -59,19 +61,22 @@ const onMessageFunctions = {
   getPlaybookRunHistoryForIncident
 };
 
-const onMessage = async (
-  { action, data: actionParams },
-  { url, ..._options },
-  callback
-) =>
+const onMessage = async ({ action, data: actionParams }, options, callback) => {
+  options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
+  // This is a v6 server so the apiUrl is just the normal app url
+  options.apiUrl = options.apiUrl.length === 0 ? options.url : options.apiUrl;
+  options.apiUrl = options.apiUrl.endsWith('/')
+    ? options.apiUrl.slice(0, -1)
+    : options.apiUrl;
+
   onMessageFunctions[action](
     actionParams,
-    { ..._options, url: url.endsWith('/') ? url.slice(0, -1) : url },
+    options,
     requestWithDefaults,
     callback,
     Logger
   );
-
+};
 module.exports = {
   doLookup,
   startup,
