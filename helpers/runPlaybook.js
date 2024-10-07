@@ -1,5 +1,5 @@
 const { createSummary } = require('./formatDemistoResults');
-const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
+const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncident');
 const { getOr, toNumber } = require('lodash/fp');
 
 const runPlaybook = async (

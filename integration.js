@@ -10,7 +10,8 @@ const runPlaybook = require('./helpers/runPlaybook');
 const searchIndicatorTypes = require('./helpers/searchIndicatorTypes');
 const searchIncidentTypes = require('./helpers/searchIncidentTypes');
 const writeToIncident = require('./helpers/writeToIncident');
-const search = require('./helpers/search');
+const { getPlaybookRunHistoryForIncident } = require('./helpers/getPlaybookRunHistoryForIncident');
+const getPlaybooksByEntityType = require('./helpers/getPlaybooksByEntityType');
 
 let Logger;
 let requestWithDefaults;
@@ -53,7 +54,9 @@ const onMessageFunctions = {
   createIndicator,
   searchIndicatorTypes,
   searchIncidentTypes,
-  writeToIncident
+  writeToIncident,
+  getPlaybooksByEntityType,
+  getPlaybookRunHistoryForIncident
 };
 
 const onMessage = async (

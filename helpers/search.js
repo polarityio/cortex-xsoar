@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2024, Polarity.io, Inc.
- */
-
-const fp = require('lodash/fp');
 const { getLogger } = require('./logger');
 
 const polarityTypeToCortexType = (entity) => {

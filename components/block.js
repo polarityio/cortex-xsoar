@@ -2,6 +2,7 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
+  playbooksByEntityTypeLoaded: false,
   notificationsData: Ember.inject.service('notificationsData'),
   state: Ember.computed.alias('block._state'),
   details: Ember.computed.alias('block.data.details'),
@@ -144,7 +145,90 @@ polarity.export = PolarityComponent.extend({
         resolve();
       });
   },
+  getPlaybooksByEntityType: function (incidentIndex) {
+    return new Ember.RSVP.Promise((resolve, reject) => {
+      this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, true);
+      const payload = {
+        action: 'getPlaybooksByEntityType',
+        data: {
+          entity: this.get('block.entity')
+        }
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set('playbooks', result.playbooks);
+          resolve();
+        })
+        .catch((err) => {
+          console.error(err);
+          this.setErrorMessage(
+            null,
+            'Get Playbooks for Entity Failed: ' +
+              (err &&
+                (err.detail || err.err || err.message || err.title || err.description)) ||
+              'Unknown Reason'
+          );
+          reject();
+        })
+        .finally(() => {
+          this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, false);
+          setTimeout(() => {
+            if (!this.isDestroyed) {
+              this.setMessage(null, '');
+              this.setErrorMessage(null, '');
+            }
+          }, 5000);
+        });
+    });
+  },
+
+  getPlaybookRunHistoryForIncident: function (incidentIndex) {
+    return new Ember.RSVP.Promise((resolve, reject) => {
+      this.set(`incidents.${incidentIndex}.__playbookRunHistoryLoading`, true);
+      const incidentId = this.get(`incidents.${incidentIndex}.id`);
+      const payload = {
+        action: 'getPlaybookRunHistoryForIncident',
+        data: {
+          incidentId
+        }
+      };
+
+      this.sendIntegrationMessage(payload)
+        .then((result) => {
+          this.set(`incidents.${incidentIndex}.pbHistory`, result.pbHistory);
+          resolve();
+        })
+        .catch((err) => {
+          this.setErrorMessage(
+            null,
+            'Get Playbooks for Incident Failed: ' +
+              (err &&
+                (err.detail || err.err || err.message || err.title || err.description)) ||
+              'Unknown Reason'
+          );
+          reject();
+        })
+        .finally(() => {
+          this.set(`incidents.${incidentIndex}.__playbookRunHistoryLoading`, false);
+          setTimeout(() => {
+            if (!this.isDestroyed) {
+              this.setMessage(null, '');
+              this.setErrorMessage(null, '');
+            }
+          }, 5000);
+        });
+    });
+  },
+
   actions: {
+    getPlaybooksByEntityType: function (incidentIndex) {
+      if (this.get('playbooksByEntityTypeLoaded') === false) {
+        return this.getPlaybooksByEntityType(incidentIndex).then(() => {
+          this.set('playbooksByEntityTypeLoaded', true);
+        });
+      }
+    },
     toggleAllIntegrations: function () {
       const hasUnSelected = this.get('state.integrations').some(
         (integration) => !integration.selected
@@ -173,6 +257,15 @@ polarity.export = PolarityComponent.extend({
       this.set('expandableTitleStates', modifiedExpandableTitleStates);
     },
     changeTab: function (incidentIndex, tabName) {
+      if (
+        tabName === 'history' &&
+        !this.get(`incidents.${incidentIndex}.__playbookRunHistoryLoaded`)
+      ) {
+        this.getPlaybookRunHistoryForIncident(incidentIndex).then(() => {
+          this.set(`incidents.${incidentIndex}.__playbookRunHistoryLoaded`, true);
+        });
+      }
+
       this.set(`incidents.${incidentIndex}.__activeTab`, tabName);
     },
     changeTopTab: function (tabName) {
@@ -378,7 +471,6 @@ polarity.export = PolarityComponent.extend({
         });
     }
   },
-
   setMessage(incidentIndex, msg) {
     if (Number.isInteger(incidentIndex)) {
       this.set(`incidents.${incidentIndex}.__message`, msg);
@@ -386,23 +478,18 @@ polarity.export = PolarityComponent.extend({
       this.set('incidentMessage', msg);
     }
   },
-
   setSummary(tags) {
     this.set('summary', tags);
   },
-
   setPlaybookRunHistory(incidentIndex, pbHistory) {
     this.set(`incidents.${incidentIndex}.pbHistory`, pbHistory);
   },
-
   setIncident(newIncident) {
     this.set(`incidents`, [newIncident]);
   },
-
   setIndicator(newIndicator) {
     this.set(`indicators`, [newIndicator]);
   },
-
   setErrorMessage(incidentIndex, msg) {
     if (Number.isInteger(incidentIndex)) {
       this.set(`incidents.${incidentIndex}.__errorMessage`, msg);
@@ -410,7 +497,6 @@ polarity.export = PolarityComponent.extend({
       this.set('incidentErrorMessage', msg);
     }
   },
-
   setRunning(incidentIndex, isRunning) {
     if (Number.isInteger(incidentIndex)) {
       this.set(`incidents.${incidentIndex}.__running`, isRunning);

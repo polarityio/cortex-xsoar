@@ -473,7 +473,7 @@
                     class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
                     href="#"
             >
-              Playbook History ({{incident.pbHistory.length}})
+              Playbook History {{#if incident.pbHistory}}({{incident.pbHistory.length}}){{/if}}
             </a>
           </li>
         </ul>
@@ -586,12 +586,17 @@
         {{/if}}
 
         {{#if (eq incident.__activeTab "history")}}
-          <div class="p-action mb-1 mt-2" {{action (toggle "__showRunPlaybook" incident)}}>
+          <div class="p-action mb-1 mt-2 d-flex align-items-center" {{action (pipe-action (action "getPlaybooksByEntityType" incidentIndex)(toggle "__showRunPlaybook" incident))}}>
             Run a playbook
             {{#if incident.__showRunPlaybook}}
-              {{fa-icon icon="chevron-up"}}
+              {{fa-icon icon="chevron-up" class="ml-1"}}
             {{else}}
-              {{fa-icon icon="chevron-down"}}
+              {{fa-icon icon="chevron-down" class="ml-1"}}
+            {{/if}}
+            {{#if incident.__loadingPlaybooksByEntityType}}
+              <span class="p-footnote ml-2">
+                {{fa-icon icon="spinner-third" spin=true}} Loading playbooks ...
+              </span>
             {{/if}}
           </div>
           {{#if incident.__showRunPlaybook}}
@@ -628,42 +633,48 @@
           {{/if}}
           <h1 class="p-title">
             {{fa-icon "history" fixedWidth=true}}
-            Playbook Run History ({{incident.pbHistory.length}})
+            Playbook Run History {{#if incident.pbHistory}}({{incident.pbHistory.length}}){{/if}}
           </h1>
-          <div class="wrap-incident">
-            {{#if incident.pbHistory.length}}
-              {{#each incident.pbHistory as |playbookRun|}}
-                <div class="playbook-container">
-                  <span class="p-title">{{playbookRun.name}}</span>
-                  {{#if playbookRun.status}}
-                    <div class="playbook-run-date">
-                      <span class="p-key">Type:</span>
-                      <span class="p-value">Current Work Plan</span>
-                    </div>
-                    <div>
-                      <span class="p-key">Status:</span>
-                      <span class="p-value">{{capitalize playbookRun.status}}</span>
-                    </div>
-                    <div>
-                      <span class="p-key">Run Date:</span>
-                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-                    </div>
-                    <div class="work-plan-link">
-                      <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
-                        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-                    </div>
-                  {{else}}
-                    <div class="playbook-run-date">
-                      <span class="p-key">Run Date:</span>
-                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-                    </div>
-                  {{/if}}
-                </div>
-              {{/each}}
-            {{else}}
-              <span class="p-value">None</span>
-            {{/if}}
-          </div>
+          {{#if incident.__playbookRunHistoryLoading}}
+            <div class="p-footnote">
+              {{fa-icon icon="spinner-third" spin=true}} Loading playbook history ...
+            </div>
+          {{else}}
+            <div class="wrap-incident">
+              {{#if incident.pbHistory.length}}
+                {{#each incident.pbHistory as |playbookRun|}}
+                  <div class="playbook-container">
+                    <span class="p-title">{{playbookRun.name}}</span>
+                    {{#if playbookRun.status}}
+                      <div class="playbook-run-date">
+                        <span class="p-key">Type:</span>
+                        <span class="p-value">Current Work Plan</span>
+                      </div>
+                      <div>
+                        <span class="p-key">Status:</span>
+                        <span class="p-value">{{capitalize playbookRun.status}}</span>
+                      </div>
+                      <div>
+                        <span class="p-key">Run Date:</span>
+                        <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+                      </div>
+                      <div class="work-plan-link">
+                        <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
+                          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                      </div>
+                    {{else}}
+                      <div class="playbook-run-date">
+                        <span class="p-key">Run Date:</span>
+                        <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+                      </div>
+                    {{/if}}
+                  </div>
+                {{/each}}
+              {{else}}
+                <span class="p-value">None</span>
+              {{/if}}
+            </div>
+          {{/if}}
         {{/if}}
       {{/each}}
     {{/if}}

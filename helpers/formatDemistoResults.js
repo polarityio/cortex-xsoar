@@ -8,67 +8,49 @@ const {
 
 const { getKeys } = require('./dataTransformations');
 
-const formatDemistoResults = (
-  entityGroupsWithPlaybooks,
-  incidentsWithPlaybookRunHistory,
-  indicators,
-  evidence,
-  options,
-  Logger
-) =>
-  fp.flatMap(
-    ({ entities, playbooks }) =>
-      fp.map((entity) => {
-        const incidentsForThisEntity = getIncidentsForThisEntity(
-          incidentsWithPlaybookRunHistory,
-          entity
-        );
+const formatDemistoResults = (entities, incidents, indicators, evidence, options, Logger) =>
+  fp.map((entity) => {
+    const incidentsForThisEntity = getIncidentsForThisEntity(incidents, entity);
 
-        const evidenceForThisEntity = getEvidenceForThisEntity(evidence, entity);
+    const evidenceForThisEntity = getEvidenceForThisEntity(evidence, entity);
 
-        const indicatorsForThisEntity = getIndicatorsForThisEntity(
-          indicators,
-          entity
-        ).map((indicator) => {
-          if (Array.isArray(indicator.comments)) {
-            indicator.comments = indicator.comments.filter(
-              (comment) => comment.type === 'IndicatorCommentRegular'
-            );
-          }
-          return indicator;
-        });
+    const indicatorsForThisEntity = getIndicatorsForThisEntity(indicators, entity).map(
+      (indicator) => {
+        if (Array.isArray(indicator.comments)) {
+          indicator.comments = indicator.comments.filter(
+            (comment) => comment.type === 'IndicatorCommentRegular'
+          );
+        }
+        return indicator;
+      }
+    );
 
-        const allowIncidentCreation =
-          entity.requestContext.requestType === 'OnDemand' &&
-          options.allowIncidentCreation;
+    const allowIncidentCreation =
+      entity.requestContext.requestType === 'OnDemand' && options.allowIncidentCreation;
 
-        return incidentsForThisEntity.length
-          ? _formatFoundIncidentResults(
-              entity,
-              incidentsForThisEntity,
-              indicatorsForThisEntity,
-              evidenceForThisEntity,
-              playbooks,
-              options,
-              Logger
-            )
-          : indicatorsForThisEntity.length ||
-            allowIncidentCreation ||
-            evidenceForThisEntity.length > 0
-          ? _formatNoIncidentFoundResults(
-              entity,
-              indicatorsForThisEntity,
-              evidenceForThisEntity,
-              playbooks,
-              allowIncidentCreation,
-              options,
-              Logger
-            )
-          : { entity, data: null };
-      }, entities),
-    entityGroupsWithPlaybooks
-  );
-const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
+    return incidentsForThisEntity.length
+      ? _formatFoundIncidentResults(
+          entity,
+          incidentsForThisEntity,
+          indicatorsForThisEntity,
+          evidenceForThisEntity,
+          options,
+          Logger
+        )
+      : indicatorsForThisEntity.length ||
+        allowIncidentCreation ||
+        evidenceForThisEntity.length > 0
+      ? _formatNoIncidentFoundResults(
+          entity,
+          indicatorsForThisEntity,
+          evidenceForThisEntity,
+          allowIncidentCreation,
+          options,
+          Logger
+        )
+      : { entity, data: null };
+  }, entities);
+const getIncidentsForThisEntity = (incidents, entity) =>
   fp.filter(
     ({ name, labels }) =>
       fp.flow(
@@ -83,7 +65,7 @@ const getIncidentsForThisEntity = (incidentsWithPlaybookRunHistory, entity) =>
         ),
         labels
       ),
-    incidentsWithPlaybookRunHistory
+    incidents
   );
 
 const getIndicatorsForThisEntity = (indicators, entity) =>
@@ -108,7 +90,6 @@ const _formatFoundIncidentResults = (
   incidentsForThisEntity,
   indicatorsForThisEntity,
   evidenceForThisEntity,
-  playbooks,
   options,
   Logger
 ) => ({
@@ -122,7 +103,7 @@ const _formatFoundIncidentResults = (
       Logger
     ),
     details: {
-      playbooks,
+      playbooks: [], // playbooks are popualted via onMessage
       incidents: getKeys(RELEVANT_INDICATOR_SEARCH_RESULT_KEYS, incidentsForThisEntity),
       indicators: indicatorsForThisEntity,
       baseUrl: `${options.url}${options.apiKeyId.length > 0 ? '' : '/#'}`,
@@ -135,7 +116,6 @@ const _formatNoIncidentFoundResults = (
   entity,
   indicatorsForThisEntity,
   evidenceForThisEntity,
-  playbooks,
   allowIncidentCreation,
   options,
   Logger
@@ -149,7 +129,7 @@ const _formatNoIncidentFoundResults = (
       ...createSummary([], indicatorsForThisEntity, evidenceForThisEntity, [], Logger)
     ],
     details: {
-      playbooks,
+      playbooks: [], //playbooks are populated via onMessage
       onDemand: true,
       baseUrl: `${options.url}${options.apiKeyId.length > 0 ? '' : '/#'}`,
       allowIncidentCreation,
