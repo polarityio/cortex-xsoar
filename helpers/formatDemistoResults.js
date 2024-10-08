@@ -20,7 +20,7 @@ const formatDemistoResults = (
     const incidentsForThisEntity = getIncidentsForThisEntity(incidentResults, entity);
 
     const evidenceForThisEntity = getEvidenceForThisEntity(evidenceResults, entity);
-    
+
     const indicatorsForThisEntity = getIndicatorsForThisEntity(
       indicatorResults,
       entity
@@ -75,8 +75,11 @@ const incidentNameMatches = (incident, entity) => {
 };
 
 const incidentLabelMatches = (incident, entity) => {
-  return incident.labels.some((label) =>
-    label && label.value && label.value.toLowerCase().includes(entity.value.toLowerCase())
+  return incident.labels.some(
+    (label) =>
+      label &&
+      label.value &&
+      label.value.toLowerCase().includes(entity.value.toLowerCase())
   );
 };
 
@@ -94,11 +97,20 @@ const getIndicatorsForThisEntity = (indicatorResults, entity) => {
  * @param entity
  * @returns {{readonly description?: *}[]}
  */
-const getEvidenceForThisEntity = (evidenceResults, entity) =>
-  fp.filter(
-    ({ description }) => fp.toLower(description).includes(fp.toLower(entity.value)),
-    evidenceResults.evidence
+const getEvidenceForThisEntity = (evidenceResults, entity) => {
+  return evidenceResults.filter(
+    (result) =>
+      evidenceDescriptionMatches(result.evidence, entity) ||
+      result.highlightsAsString.includes(entity.value.toLowerCase())
   );
+};
+
+const evidenceDescriptionMatches = (evidence, entity) => {
+  return (
+    evidence.description &&
+    evidence.description.toLowerCase().includes(entity.value.toLowerCase())
+  );
+};
 
 const _formatFoundIncidentResults = (
   entity,

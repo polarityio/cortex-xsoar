@@ -87,7 +87,7 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
           case 'indicator':
             if (result.insightResult && result.insightResult.insight) {
               // Add a "synthetic" index to support front-end paging
-              result.insightResult.indicator.__index = accum.indicators.length;
+              result.insightResult.insight.__index = accum.indicators.length;
               accum.indicators.push({
                 highlights: result.insightResult.highlights,
                 highlightsAsString: JSON.stringify(result.insightResult.highlights).toLowerCase(),
