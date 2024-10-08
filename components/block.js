@@ -8,6 +8,7 @@ polarity.export = PolarityComponent.extend({
   details: Ember.computed.alias('block.data.details'),
   summary: Ember.computed.alias('block.data.summary'),
   incidents: Ember.computed.alias('details.incidents'),
+  filteredIncidents: Ember.computed.alias('filteredPagingData'),
   indicators: Ember.computed.alias('details.indicators'),
   evidence: Ember.computed.alias('details.evidence'),
   playbooks: Ember.computed.alias('details.playbooks'),
@@ -44,6 +45,35 @@ polarity.export = PolarityComponent.extend({
   isRunning: false,
   isIndicatorRunning: false,
   expandableTitleStates: {},
+  // Incident Paging Variables
+  currentPage: 1,
+  pageSize: 1,
+  pagingData: Ember.computed.alias('incidents'),
+  isPrevButtonsDisabled: Ember.computed('currentPage', function () {
+    return this.get('currentPage') === 1;
+  }),
+  isNextButtonDisabled: Ember.computed(
+    'pagingData.length',
+    'pageSize',
+    'currentPage',
+    function () {
+      const totalResults = this.get('pagingData.length');
+      const totalPages = Math.ceil(totalResults / this.get('pageSize'));
+      return this.get('currentPage') === totalPages;
+    }
+  ),
+  pagingStartItem: Ember.computed('currentPage', 'pageSize', function () {
+    return (this.get('currentPage') - 1) * this.get('pageSize') + 1;
+  }),
+  pagingEndItem: Ember.computed('pagingStartItem', function () {
+    return this.get('pagingStartItem') - 1 + this.get('pageSize');
+  }),
+  filteredPagingData: Ember.computed('pageSize', 'currentPage', function () {
+    const startIndex = (this.get('currentPage') - 1) * this.get('pageSize');
+    const endIndex = startIndex + this.get('pageSize');
+
+    return this.get('pagingData').slice(startIndex, endIndex);
+  }),
   init() {
     if (!this.get('allowIncidentCreation') && !this.get('incidents')) {
       this.set('expandableTitleStates', { 0: true });
@@ -68,14 +98,18 @@ polarity.export = PolarityComponent.extend({
 
     if (
       this.get('state.activeTab') === 'incidents' &&
-      this.get('playbooksByEntityTypeLoaded') === false
+      this.get('playbooksByEntityTypeLoaded') === false &&
+      this.get('allowIncidentCreation') &&
+      !this.get('incidents')
     ) {
       this.set('loadingPlaybooksByEntityType', true);
-      this.getPlaybooksByEntityType().then(() => {
-        this.set('playbooksByEntityTypeLoaded', true);
-      }).finally(() => {
-        this.set('loadingPlaybooksByEntityType', false);
-      });
+      this.getPlaybooksByEntityType()
+        .then(() => {
+          this.set('playbooksByEntityTypeLoaded', true);
+        })
+        .finally(() => {
+          this.set('loadingPlaybooksByEntityType', false);
+        });
     }
 
     this._super(...arguments);
@@ -231,6 +265,29 @@ polarity.export = PolarityComponent.extend({
   },
 
   actions: {
+    prevPage() {
+      let currentPage = this.get('currentPage');
+
+      if (currentPage > 1) {
+        this.set('currentPage', currentPage - 1);
+      }
+    },
+    nextPage() {
+      const totalResults = this.get('pagingData.length');
+      const totalPages = Math.ceil(totalResults / this.get('pageSize'));
+      let currentPage = this.get('currentPage');
+      if (currentPage < totalPages) {
+        this.set('currentPage', currentPage + 1);
+      }
+    },
+    firstPage() {
+      this.set('currentPage', 1);
+    },
+    lastPage() {
+      const totalResults = this.get('pagingData.length');
+      const totalPages = Math.ceil(totalResults / this.get('pageSize'));
+      this.set('currentPage', totalPages);
+    },
     getPlaybooksByEntityType: function (incidentIndex) {
       if (this.get('playbooksByEntityTypeLoaded') === false) {
         this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, true);
@@ -284,13 +341,20 @@ polarity.export = PolarityComponent.extend({
       if (tabName === 'write' && !Array.isArray(this.get('state.integrations'))) {
         this.setIntegrationSelection();
       }
-      if (tabName === 'incidents' && this.get('playbooksByEntityTypeLoaded') === false) {
+      if (
+        tabName === 'incidents' &&
+        this.get('playbooksByEntityTypeLoaded') === false &&
+        this.get('allowIncidentCreation') &&
+        !this.get('incidents')
+      ) {
         this.set('loadingPlaybooksByEntityType', true);
-        return this.getPlaybooksByEntityType().then(() => {
-          this.set('playbooksByEntityTypeLoaded', true);
-        }).finally(() => {
-          this.set('loadingPlaybooksByEntityType', false);
-        });
+        return this.getPlaybooksByEntityType()
+          .then(() => {
+            this.set('playbooksByEntityTypeLoaded', true);
+          })
+          .finally(() => {
+            this.set('loadingPlaybooksByEntityType', false);
+          });
       }
     },
 
