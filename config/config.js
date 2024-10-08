@@ -37,6 +37,16 @@ module.exports = {
       adminOnly: true
     },
     {
+      key: 'apiUrl',
+      name: 'XSOAR v8 - API URL',
+      description:
+        'The API URL for the Cortex XSOAR v8 API which should include the schema (i.e., https://).  This value is only required if you are authenticating to Cortex XSOAR v8.  The API URL format will be `https://api-{fqdn}` and can be copied directly from the v8 API Keys settings page.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
       key: 'apiKey',
       name: 'API Key',
       description:
@@ -45,6 +55,26 @@ module.exports = {
       type: 'password',
       userCanEdit: false,
       adminOnly: true
+    },
+    {
+      key: 'apiKeyId',
+      name: 'XSOAR v8 - API Key ID',
+      description:
+        'A valid Cortex XSOAR v8 API Key ID which can be found in your Cortex XSOAR API Keys Table.  This value is only required if you are authenticating to Cortex XSOAR v8.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'enableThreatIntelligenceManagement',
+      name: 'XSOAR v8 - Threat Intelligence Management Supported',
+      description:
+        'If checked, the Cortex XSOAR v8 server you are connecting to includes a license for Threat Intelligence Management (TIM).  If not checked, links to indicator details will not be provided within Polarity as the Indicator full view page in Cortex requires a TIM license.  Cortex XSOAR v6 users should leave this option enabled.',
+      default: true,
+      type: 'boolean',
+      userCanEdit: false,
+      adminOnly: false
     },
     {
       key: 'allowIndicatorCreation',
@@ -70,11 +100,11 @@ module.exports = {
       key: 'allowEvidenceSubmission',
       name: 'Allow Evidence Submission',
       description:
-          'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
+        'If checked, users will be able to submit data from selected Polarity integrations as Incident evidence.  This setting must be visible to all users.',
       default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: false
-    },
+    }
   ]
 };

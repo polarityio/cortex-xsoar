@@ -33,7 +33,11 @@ const createIndicator = async (
     }
 
     callback(null, {
-      newIndicator: newlyCreatedIndicator,
+      newIndicator: {
+        highlights: null,
+        highlightsAsString: '',
+        indicator: newlyCreatedIndicator
+      },
       newSummary: createSummary([], [newlyCreatedIndicator], [], summary, Logger)
     });
   } catch (error) {
@@ -65,10 +69,11 @@ const _createIndicatorRequest = (
   requestWithDefaults
 ) =>
   requestWithDefaults({
-    url: `${options.url}/indicator/create`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}indicator/create`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: {

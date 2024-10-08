@@ -1,5 +1,5 @@
 const { createSummary } = require('./formatDemistoResults');
-const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncidents');
+const { formatPlaybookRunHistory } = require('./getPlaybookRunHistoryForIncident');
 const { getOr, toNumber } = require('lodash/fp');
 
 const runPlaybook = async (
@@ -125,10 +125,13 @@ const _runPlaybookOnExistingIncident = async (
 
 const _runPlaybook = (options, playbookId, incidentId, Logger, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/inv-playbook/new/${playbookId}/${incidentId}`,
+    url: `${options.apiUrl}/${
+      options.apiKeyId.length > 0 ? 'xsoar/' : ''
+    }inv-playbook/new/${playbookId}/${incidentId}`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
   }).catch((error) => {
@@ -170,8 +173,18 @@ const _createContainerAndRunPlaybook = async (
 
     return {
       pbHistory: formattedPlaybookHistory,
-      newIncident: newlyCreatedIncident,
-      newSummary: createSummary([newlyCreatedIncident], [], [], summary, Logger)
+      newIncident: {
+        highlights: null,
+        highlightsAsString: '',
+        incident: newlyCreatedIncident
+      },
+      newSummary: createSummary(
+        [{ highlights: {}, highlightsAsString: '', incident: newlyCreatedIncident }],
+        [],
+        [],
+        summary,
+        Logger
+      )
     };
   } catch (error) {
     Logger.error(error, 'Incident Creation or Playbook Run Error');
@@ -189,10 +202,11 @@ const _createIncidentAndRunPlaybook = (
   requestWithDefaults
 ) =>
   requestWithDefaults({
-    url: `${options.url}/incident`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}incident`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: {
@@ -212,10 +226,13 @@ const _createIncidentAndRunPlaybook = (
 
 const _startInvestigation = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/incident/investigate`,
+    url: `${options.apiUrl}/${
+      options.apiKeyId.length > 0 ? 'xsoar/' : ''
+    }incident/investigate`,
     method: 'POST',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     },
     body: {
@@ -226,10 +243,13 @@ const _startInvestigation = (newIncident, options, requestWithDefaults) =>
 
 const _getPlaybookRunHistory = (newIncident, options, requestWithDefaults) =>
   requestWithDefaults({
-    url: `${options.url}/inv-playbook/${newIncident.id}`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}inv-playbook/${
+      newIncident.id
+    }`,
     method: 'GET',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
   });

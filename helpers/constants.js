@@ -1,4 +1,4 @@
-const RELEVANT_INDICATOR_SEARCH_RESULT_KEYS = [
+const RELEVANT_INCIDENT_SEARCH_RESULT_KEYS = [
   'id',
   'type',
   'name',
@@ -9,7 +9,8 @@ const RELEVANT_INDICATOR_SEARCH_RESULT_KEYS = [
   'details',
   'owner',
   'category',
-  'pbHistory'
+  'pbHistory',
+  '__index'
 ];
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
@@ -42,7 +43,7 @@ const INDICATOR_TYPE_DEFAULTS = {
 
 module.exports = {
   IGNORED_IPS,
-  RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
+  RELEVANT_INCIDENT_SEARCH_RESULT_KEYS,
   PLAYBOOK_SEARCH_TERMS,
   HUMAN_READABLE_SEVERITY_LEVELS,
   INDICATOR_TYPE_DEFAULTS

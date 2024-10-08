@@ -1,10 +1,5 @@
-/*
- * Copyright (c) 2024, Polarity.io, Inc.
- */
-
-const fp = require('lodash/fp');
 const { getLogger } = require('./logger');
-
+const { isNullOrEmptyObject } = require('./dataTransformations');
 const polarityTypeToCortexType = (entity) => {
   if (entity.types.includes('IPv4') || entity.types.includes('IPv6')) {
     return 'IP';
@@ -40,11 +35,12 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
   const Logger = getLogger();
 
   const requestOptions = {
-    url: `${options.url}/search`,
+    url: `${options.apiUrl}/${options.apiKeyId.length > 0 ? 'xsoar/' : ''}search`,
     method: 'POST',
     json: true,
     headers: {
-      authorization: options.apiKey
+      authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId
     },
     body: {
       filter: {
@@ -68,17 +64,47 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
         switch (result.type) {
           case 'incident':
             if (result.incidentResult && result.incidentResult.incident) {
-              accum.incidents.push(result.incidentResult.incident);
+              // Add a "synthetic" index to support front-end paging
+              result.incidentResult.incident.__index = accum.incidents.length;
+              accum.incidents.push({
+                highlights: isNullOrEmptyObject(result.incidentResult.highlights)
+                  ? null
+                  : result.incidentResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.incidentResult.highlights
+                ).toLowerCase(),
+                incident: result.incidentResult.incident
+              });
             }
             break;
           case 'evidence':
             if (result.evidenceResult && result.evidenceResult.evidence) {
-              accum.evidence.push(result.evidenceResult.evidence);
+              // Add a "synthetic" index to support front-end paging
+              result.evidenceResult.evidence.__index = accum.evidence.length;
+              accum.evidence.push({
+                highlights: isNullOrEmptyObject(result.evidenceResult.highlights)
+                  ? null
+                  : result.evidenceResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.evidenceResult.highlights
+                ).toLowerCase(),
+                evidence: result.evidenceResult.evidence
+              });
             }
             break;
           case 'indicator':
             if (result.insightResult && result.insightResult.insight) {
-              accum.indicators.push(result.insightResult.insight);
+              // Add a "synthetic" index to support front-end paging
+              result.insightResult.insight.__index = accum.indicators.length;
+              accum.indicators.push({
+                highlights: isNullOrEmptyObject(result.insightResult.highlights)
+                  ? null
+                  : result.insightResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.insightResult.highlights
+                ).toLowerCase(),
+                indicator: result.insightResult.insight
+              });
             }
             break;
         }
@@ -90,6 +116,7 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
         indicators: []
       }
     );
+    
     return formattedResults;
   } catch (error) {
     Logger.error(error, 'General Search Error');

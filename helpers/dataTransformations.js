@@ -11,13 +11,20 @@ const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) 
     .flatten()
     .value();
 
-const getKeys = (keys, items) =>
-  Array.isArray(items)
-    ? items.map((item) => _.pickBy(item, (v, key) => keys.includes(key)))
-    : _.pickBy(items, (v, key) => keys.includes(key));
+const isNullOrEmptyObject = (obj) => {
+  if (obj === null) {
+    return true;
+  }
+
+  if (typeof obj === 'object') {
+    return Object.keys(obj).length === 0;
+  }
+
+  return false;
+};
 
 module.exports = {
+  isNullOrEmptyObject,
   _partitionFlatMap,
-  getKeys,
   _P
 };

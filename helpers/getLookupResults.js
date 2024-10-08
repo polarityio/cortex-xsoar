@@ -3,13 +3,7 @@ const _ = require('lodash');
 const { IGNORED_IPS } = require('./constants');
 
 const { _partitionFlatMap } = require('./dataTransformations');
-const getPlaybooksByEntityGroup = require('./getPlaybooksByEntityGroup');
-const queryIncidents = require('./queryIncidents');
-const queryIndicators = require('./queryIndicators');
 const search = require('./search');
-const {
-  getPlaybookRunHistoryForIncidents
-} = require('./getPlaybookRunHistoryForIncidents');
 const { formatDemistoResults } = require('./formatDemistoResults');
 
 const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
@@ -18,25 +12,13 @@ const getLookupResults = (entities, options, requestWithDefaults, Logger) =>
       const { entitiesPartition, ignoredIpLookupResults } =
         _splitOutIgnoredIps(_entitiesPartition);
 
-      const entityGroupsWithPlaybooks = await getPlaybooksByEntityGroup(
-        entitiesPartition,
-        options,
-        requestWithDefaults,
-        Logger
-      );
-
       const searchResults = await search(entitiesPartition, options, requestWithDefaults);
 
-      const incidentsWithPlaybookRunHistory = await getPlaybookRunHistoryForIncidents(
-        searchResults.incidents,
-        options,
-        requestWithDefaults,
-        Logger
-      );
+      Logger.trace({ searchResults }, 'Search Results');
 
       const lookupResults = formatDemistoResults(
-        entityGroupsWithPlaybooks,
-        incidentsWithPlaybookRunHistory,
+        entities,
+        searchResults.incidents,
         searchResults.indicators,
         searchResults.evidence,
         options,
