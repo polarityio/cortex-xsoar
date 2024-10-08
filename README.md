@@ -32,15 +32,24 @@ When searching Evidence, the Cortex XSOAR REST API supports searching the Eviden
 
 ## Cortex XSOAR Integration Options
 
-### Server URL
+### URL
 
-The Server URL where the Cortex XSOAR API instance is located.  The Server URL should include the schema (https) and the fully qualified domain name of the Cortex XSOAR server.
+The base URL for the Cortex XSOAR instance which should include the schema (i.e., https://). For v6 and v8 servers you should provide the URL to your Cortex web application.
+
+### XSOAR v8 - API URL
+The API URL for the Cortex XSOAR v8 API which should include the schema (i.e., https://). This value is only required if you are authenticating to Cortex XSOAR v8. The API URL format will be `https://api-{fqdn}` and can be copied directly from the v8 API Keys settings page.
 
 ### API Key
-
-The API token to use to authenticate with the Cortex XSOAR server.  See the official documentation for instructions on setting up an API token. 
+A valid Cortex XSOAR API Key which can be found in your Cortex XSOAR Dashboard Settings
 
 > If you are running a multi-tenant deployment, the API key must be generated specifically for the tenant you wish to search. 
+
+### XSOAR v8 - API Key ID
+A valid Cortex XSOAR v8 API Key ID which can be found in your Cortex XSOAR API Keys Table. This value is only required if you are authenticating to Cortex XSOAR v8.
+
+
+### XSOAR v8 - Threat Intelligence Management Supported
+If checked, the Cortex XSOAR v8 server you are connecting to includes a license for Threat Intelligence Management (TIM). If not checked, links to indicator details will not be provided within Polarity as the Indicator full view page in Cortex requires a TIM license. Cortex XSOAR v6 users should leave this option enabled.
 
 ### Allow Indicator Creation
 

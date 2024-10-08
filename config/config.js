@@ -1,4 +1,5 @@
 module.exports = {
+  polarityIntegrationUuid: 'd830fb30-cce1-11ed-aeee-075d3490155d',
   name: 'Cortex XSOAR',
   acronym: 'CX',
   description:
@@ -23,14 +24,14 @@ module.exports = {
     proxy: ''
   },
   logging: {
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'info'
   },
   options: [
     {
       key: 'url',
       name: 'URL',
       description:
-        'The base URL for the Cortex XSOAR API which should include the schema (i.e., https://)',
+        'The base URL for the Cortex XSOAR instance which should include the schema (i.e., https://).  For v6 and v8 servers you should provide the URL to your Cortex web application.',
       default: '',
       type: 'text',
       userCanEdit: false,
