@@ -39,7 +39,16 @@
     {
       "key": "url",
       "name": "URL",
-      "description": "The base URL for the Cortex XSOAR API which should include the schema (i.e., https://)",
+      "description": "The base URL for the Cortex XSOAR instance which should include the schema (i.e., https://).  For v6 and v8 servers you should provide the URL to your Cortex web application.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "apiUrl",
+      "name": "XSOAR v8 - API URL",
+      "description": "The API URL for the Cortex XSOAR v8 API which should include the schema (i.e., https://).  This value is only required if you are authenticating to Cortex XSOAR v8.  The API URL format will be `https://api-{fqdn}` and can be copied directly from the v8 API Keys settings page.",
       "default": "",
       "type": "text",
       "userCanEdit": false,
@@ -53,6 +62,24 @@
       "type": "password",
       "userCanEdit": false,
       "adminOnly": true
+    },
+    {
+      "key": "apiKeyId",
+      "name": "XSOAR v8 - API Key ID",
+      "description": "A valid Cortex XSOAR v8 API Key ID which can be found in your Cortex XSOAR API Keys Table.  This value is only required if you are authenticating to Cortex XSOAR v8.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "enableThreatIntelligenceManagement",
+      "name": "XSOAR v8 - Threat Intelligence Management Supported",
+      "description": "If checked, the Cortex XSOAR v8 server you are connecting to includes a license for Threat Intelligence Management (TIM).  If not checked, links to indicator details will not be provided within Polarity as the Indicator full view page in Cortex requires a TIM license.  Cortex XSOAR v6 users should leave this option enabled.",
+      "default": true,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": false
     },
     {
       "key": "allowIndicatorCreation",

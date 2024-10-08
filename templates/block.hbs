@@ -160,8 +160,9 @@
       {{/if}}
     {{else}}
       {{#if indicators.length}}
-        {{#each indicators as |indicator indicatorIndex|}}
-          {{#if (get expandableTitleStates indicatorIndex)}}
+        {{#each indicators as |indicatorResult indicatorIndex|}}
+          {{#let indicatorResult.indicator as | indicator |}}
+            {{#if (get expandableTitleStates indicatorIndex)}}
             {{#if (eq indicator.score 1)}}
               <a
                       href="#"
@@ -203,12 +204,14 @@
                 {{/if}}
               {{/if}}
             {{/if}}
-            <div class="work-plan-link">
-              <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
-                View in Cortex XSOAR
-                {{fa-icon "external-link-square" class="external-link-icon"}}
-              </a>
-            </div>
+            {{#if block.userOptions.enableThreatIntelligenceManagement}}
+              <div class="work-plan-link">
+                <a class="p-link" href="{{baseUrl}}/indicator/{{indicator.id}}">
+                  View in Cortex XSOAR
+                  {{fa-icon "external-link-square" class="external-link-icon"}}
+                </a>
+              </div>
+            {{/if}}
             {{#if indicator.type}}
               <div>
                 <span class="p-key">Type:</span>
@@ -318,6 +321,7 @@
               {{/if}}
             {{/if}}
           {{/if}}
+          {{/let}}
         {{/each}}
       {{/if}}
     {{/if}}
@@ -409,12 +413,16 @@
 
       <div class="input-container">
         <label class="small ifta-label">
-          Playbook
+          {{#if loadingPlaybooksByEntityType}}
+            Loading Playbooks {{fa-icon icon="spinner-third" spin=true class="ml-1"}}
+          {{else}}
+            Playbook
+          {{/if}}
         </label>
         <select
                 class="ifta-field"
           {{on "change" (pick "target.value" (set this "newIncidentPlaybookId"))}}
-                disabled={{isRunning}}
+                disabled={{or isRunning loadingPlaybooksByEntityType}}
         >
           <option selected value="">-- No Associated Playbook --</option>
           {{#each playbooks as |playbook|}}
@@ -433,7 +441,7 @@
         <button
           {{action "runPlaybook" newIncidentPlaybookId}}
                 class="p-btn btn btn-light mt-1" class="p-btn btn btn-light mt-1"
-                disabled={{isRunning}}
+                disabled={{or isRunning loadingPlaybooksByEntityType}}
         >
           Create & Run
         </button>
@@ -449,262 +457,319 @@
         </div>
       {{/if}}
     {{else}}
-      {{#each incidents as |incident incidentIndex|}}
-        {{#if (gt incidentIndex 0)}}
-          <hr>
-        {{/if}}
-        <div class="p-title">
-          {{fa-icon icon="shield-alt" fixedWidth=true}} #{{incident.id}} {{incident.name}} - Incident Info
-        </div>
-        <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Cortex XSOAR
-          {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-
-        <ul class="nav nav-tabs mt-2">
-          <li class="nav-item">
-            <a {{action "changeTab" incidentIndex "incident"}}
-                    class="nav-link  {{if (or (eq incident.__activeTab "incident")(not incident.__activeTab))"active"}}"
-                    href="#">Incident</a>
-          </li>
-          <li class="nav-item">
-            <a
-              {{action "changeTab" incidentIndex "history"}}
-                    class="nav-link {{if (eq incident.__activeTab "history") "active"}}"
-                    href="#"
-            >
-              Playbook History ({{incident.pbHistory.length}})
-            </a>
-          </li>
-        </ul>
-
-        {{#if (or (eq incident.__activeTab "incident") (not incident.__activeTab))}}
-          <div class="p-title">
-            {{fa-icon "info" fixedWidth=true}} Details
-          </div>
-          {{#if incident.id}}
-            <div>
-              <span class="p-key">Id:</span>
-              <span class="p-value">#{{incident.id}}</span>
+      {{#each filteredIncidents as |incidentResult|}}
+        {{#let incidentResult.incident as | incident |}}
+          <div class="incident-container">
+            <div class="p-title justify-content-between align-items-start mt-0">
+              <div>{{fa-icon icon="shield-alt" fixedWidth=true}} #{{incident.id}} - {{incident.name}}</div>
+              <div class="pl-1 page-info p-footnote">#{{pagingStartItem}} of {{pagingData.length}}</div>
             </div>
-          {{/if}}
-          {{#if incident.name}}
-            <div>
-              <span class="p-key">Name:</span>
-              <span class="p-value">{{incident.name}}</span>
-            </div>
-          {{/if}}
-          {{#if incident.type}}
-            <div>
-              <span class="p-key">Type:</span>
-              <span class="p-value">{{incident.type}}</span>
-            </div>
-          {{/if}}
-          {{#if incident.category}}
-            <div>
-              <span class="p-key">Category:</span>
-              <span class="p-value">{{incident.category}}</span>
-            </div>
-          {{/if}}
-
-          <div>
-            <span class="p-key">Severity:</span>
-            <span class="p-value">
-            {{#unless incident.severity}}
-              <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
-            {{/unless}}
-              {{#if (eq incident.severity 0.5)}}
-                <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
-              {{/if}}
-              {{#if (eq incident.severity 1)}}
-                <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
-              {{/if}}
-              {{#if (eq incident.severity 2)}}
-                <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
-              {{/if}}
-              {{#if (eq incident.severity 3)}}
-                <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
-              {{/if}}
-              {{#if (eq incident.severity 4)}}
-                <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
-              {{/if}}
-          </span>
-          </div>
-
-          {{#if incident.reason}}
-            <div>
-              <span class="p-key">Reason:</span>
-              <span class="p-value">{{incident.reason}}</span>
-            </div>
-          {{/if}}
-          {{#if incident.details}}
-            <div>
-              <span class="p-key">Details:</span>
-              <span class="p-value">{{incident.details}}</span>
-            </div>
-          {{/if}}
-
-
-          {{#if incident.created}}
-            <div>
-              <span class="p-key">Date Created:</span>
-              <span class="p-value">{{moment-format incident.created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-            </div>
-          {{/if}}
-          {{#if incident.owner}}
-            <div>
-              <span class="p-key">Owner:</span>
-              <span class="p-value">{{incident.owner}}</span>
-            </div>
-          {{/if}}
-          {{#if (not indicators.length)}}
-            <div>
-              <span class="p-key">Indicators Found:</span>
-              <span class="p-value"><em>None</em></span>
-            </div>
-          {{/if}}
-
-          {{#if (and incident.labels incident.labels.length)}}
-            <div class="p-title">
-              {{fa-icon "tag" fixedWidth=true}} Labels
-            </div>
-            <div>
-              {{#each incident.labels as |label|}}
-                <div>
-                  <span class="p-key">{{label.type}}:</span>
-                  <span class="p-value">{{label.value}}</span>
+            <a class="p-link" href="{{baseUrl}}/Custom/caseinfoid/{{incident.id}}">View in Cortex XSOAR
+              {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+    
+            <ul class="nav nav-tabs mt-2">
+              <li class="nav-item">
+                <a {{action "changeTab" incident.__index "incident"}}
+                        class="nav-link  {{if (or (eq incidentResult.__activeTab "incident")(not incidentResult.__activeTab))"active"}}"
+                        href="#">Incident</a>
+              </li>
+              <li class="nav-item">
+                <a
+                  {{action "changeTab" incident.__index "history"}}
+                        class="nav-link {{if (eq incidentResult.__activeTab "history") "active"}}"
+                        href="#"
+                >
+                  Playbook History {{#if incident.pbHistory}}({{incident.pbHistory.length}}){{/if}}
+                </a>
+              </li>
+            </ul>
+    
+            {{#if (or (eq incidentResult.__activeTab "incident") (not incidentResult.__activeTab))}}
+              {{#unless (is-empty incidentResult.highlights)}}
+                <div class="p-sub-title">
+                  Search Match
                 </div>
-              {{/each}}
-            </div>
-          {{/if}}
-
-          {{#if block.userOptions.allowEvidenceSubmission}}
-            <div class="p-action mt-2" {{action "addEvidence" incident.id}}>
-              {{fa-icon icon="plus-circle" fixedWidth=true}} Add evidence
-            </div>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq incident.__activeTab "history")}}
-          <div class="p-action mb-1 mt-2" {{action (toggle "__showRunPlaybook" incident)}}>
-            Run a playbook
-            {{#if incident.__showRunPlaybook}}
-              {{fa-icon icon="chevron-up"}}
-            {{else}}
-              {{fa-icon icon="chevron-down"}}
-            {{/if}}
-          </div>
-          {{#if incident.__showRunPlaybook}}
-            <h1 class="p-title">{{fa-icon "book" fixedWidth=true}} Playbooks</h1>
-            <select class="w-100" size=5 onchange={{action (mut incident.__selectedPlaybookId) value="target.value"}}>
-              {{#each playbooks as |playbook|}}
-                <option value="{{playbook.id}}">{{playbook.name}}</option>
-              {{/each}}
-            </select>
-            <div class="d-flex flex-row justify-content-between align-items-center">
+                {{#each-in incidentResult.highlights as | matchKey highlight| }}
+                  <div>
+                    <span class="p-key">{{matchKey}}:</span>
+                    <span class="p-value">
+                      {{#each-in highlight as | highlightKey highlightMeta |}}
+                        {{highlightKey}}
+                      {{/each-in}}                    
+                    </span>
+                  </div>
+                {{/each-in}}
+              {{/unless}}
+              
+              <div class="p-sub-title">
+                Details
+              </div>
+              {{#if incident.id}}
+                <div>
+                  <span class="p-key">Id:</span>
+                  <span class="p-value">#{{incident.id}}</span>
+                </div>
+              {{/if}}
+              {{#if incident.name}}
+                <div>
+                  <span class="p-key">Name:</span>
+                  <span class="p-value">{{incident.name}}</span>
+                </div>
+              {{/if}}
+              {{#if incident.type}}
+                <div>
+                  <span class="p-key">Type:</span>
+                  <span class="p-value">{{incident.type}}</span>
+                </div>
+              {{/if}}
+              {{#if incident.category}}
+                <div>
+                  <span class="p-key">Category:</span>
+                  <span class="p-value">{{incident.category}}</span>
+                </div>
+              {{/if}}
+    
               <div>
-                {{#if incident.__running}}
-                  {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+                <span class="p-key">Severity:</span>
+                <span class="p-value">
+                {{#unless incident.severity}}
+                  <span style="color: #9AA0A3">{{fa-icon "bomb" fixedWidth=true}}</span> Unknown
+                {{/unless}}
+                  {{#if (eq incident.severity 0.5)}}
+                    <span style="color: #3497FE">{{fa-icon "bullhorn" fixedWidth=true}}</span> Informational
+                  {{/if}}
+                  {{#if (eq incident.severity 1)}}
+                    <span style="color: #00CD33">{{fa-icon "burn" fixedWidth=true}}</span> Low
+                  {{/if}}
+                  {{#if (eq incident.severity 2)}}
+                    <span style="color: #FF9000">{{fa-icon "fire" fixedWidth=true}}</span> Medium
+                  {{/if}}
+                  {{#if (eq incident.severity 3)}}
+                    <span style="color: rgba(255, 23, 68, 0.7)">{{fa-icon "fire-alt" fixedWidth=true}}</span> High
+                  {{/if}}
+                  {{#if (eq incident.severity 4)}}
+                    <span style="color: #D0021C">{{fa-icon "exclamation" fixedWidth=true}}</span> Critical
+                  {{/if}}
+              </span>
+              </div>
+    
+              {{#if incident.reason}}
+                <div>
+                  <span class="p-key">Reason:</span>
+                  <span class="p-value">{{incident.reason}}</span>
+                </div>
+              {{/if}}
+              {{#if incident.details}}
+                <div>
+                  <span class="p-key">Details:</span>
+                  <span class="p-value">{{incident.details}}</span>
+                </div>
+              {{/if}}
+    
+    
+              {{#if incident.created}}
+                <div>
+                  <span class="p-key">Date Created:</span>
+                  <span class="p-value">{{moment-format incident.created "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+                </div>
+              {{/if}}
+              {{#if incident.owner}}
+                <div>
+                  <span class="p-key">Owner:</span>
+                  <span class="p-value">{{incident.owner}}</span>
+                </div>
+              {{/if}}
+              {{#if (not indicators.length)}}
+                <div>
+                  <span class="p-key">Indicators Found:</span>
+                  <span class="p-value"><em>None</em></span>
+                </div>
+              {{/if}}
+    
+              {{#if (and incident.labels incident.labels.length)}}
+                <div class="p-sub-title">
+                  Labels
+                </div>
+                <div>
+                  {{#each incident.labels as |label|}}
+                    <div>
+                      <span class="p-key">{{label.type}}:</span>
+                      <span class="p-value">{{label.value}}</span>
+                    </div>
+                  {{/each}}
+                </div>
+              {{/if}}
+    
+              {{#if block.userOptions.allowEvidenceSubmission}}
+                <div class="p-action mt-2" {{action "addEvidence" incident.id}}>
+                  {{fa-icon icon="plus-circle" fixedWidth=true}} Add evidence
+                </div>
+              {{/if}}
+            {{/if}}
+            {{!-- End of Incidents - Incident Tab --}}
+          
+            {{#if (eq incidentResult.__activeTab "history")}}
+              <div class="p-action mb-1 mt-2 d-flex align-items-center" {{action (pipe-action (action "getPlaybooksByEntityType" incident.__index)(toggle "__showRunPlaybook" incidentResult))}}>
+                Run a playbook
+                {{#if incidentResult.__showRunPlaybook}}
+                  {{fa-icon icon="chevron-up" class="ml-1"}}
+                {{else}}
+                  {{fa-icon icon="chevron-down" class="ml-1"}}
+                {{/if}}
+                {{#if incidentResult.__loadingPlaybooksByEntityType}}
+                  <span class="p-footnote ml-2">
+                    {{fa-icon icon="spinner-third" spin=true}} Loading playbooks ...
+                  </span>
                 {{/if}}
               </div>
-              <button
-                {{action "runPlaybook" incident.__selectedPlaybookId incidentIndex incident.id}}
-                      class="p-btn btn btn-light mt-1"
-                      disabled={{incident.__running}}
-              >
-                Run Playbook
-              </button>
-            </div>
-            {{#if incident.__message}}
-              <div class="alert alert-info mt-1">
-                {{incident.__message}}
-              </div>
-            {{/if}}
-            {{#if incident.__errorMessage}}
-              <div class="alert alert-danger mt-1">
-                {{incident.__errorMessage}}
-              </div>
-            {{/if}}
-          {{/if}}
-          <h1 class="p-title">
-            {{fa-icon "history" fixedWidth=true}}
-            Playbook Run History ({{incident.pbHistory.length}})
-          </h1>
-          <div class="wrap-incident">
-            {{#if incident.pbHistory.length}}
-              {{#each incident.pbHistory as |playbookRun|}}
-                <div class="playbook-container">
-                  <span class="p-title">{{playbookRun.name}}</span>
-                  {{#if playbookRun.status}}
-                    <div class="playbook-run-date">
-                      <span class="p-key">Type:</span>
-                      <span class="p-value">Current Work Plan</span>
-                    </div>
-                    <div>
-                      <span class="p-key">Status:</span>
-                      <span class="p-value">{{capitalize playbookRun.status}}</span>
-                    </div>
-                    <div>
-                      <span class="p-key">Run Date:</span>
-                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-                    </div>
-                    <div class="work-plan-link">
-                      <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
-                        {{fa-icon "external-link-square" class="external-link-icon"}}</a>
-                    </div>
+              {{#if incidentResult.__showRunPlaybook}}
+                <h1 class="p-sub-title">Playbooks</h1>
+                <select class="w-100" size=5 onchange={{action (mut incidentResult.__selectedPlaybookId) value="target.value"}}>
+                  {{#each playbooks as |playbook|}}
+                    <option value="{{playbook.id}}">{{playbook.name}}</option>
+                  {{/each}}
+                </select>
+                <div class="d-flex flex-row justify-content-between align-items-center">
+                  <div>
+                    {{#if incidentResult.__running}}
+                      {{fa-icon "spinner-third" fixedWidth=true spin=true}} Running
+                    {{/if}}
+                  </div>
+                  <button
+                    {{action "runPlaybook" incidentResult.__selectedPlaybookId incident.__index incident.id}}
+                          class="p-btn btn btn-light mt-1"
+                          disabled={{incidentResult.__running}}
+                  >
+                    Run Playbook
+                  </button>
+                </div>
+                {{#if incidentResult.__message}}
+                  <div class="alert alert-info mt-1">
+                    {{incidentResult.__message}}
+                  </div>
+                {{/if}}
+                {{#if incidentResult.__errorMessage}}
+                  <div class="alert alert-danger mt-1">
+                    {{incidentResult.__errorMessage}}
+                  </div>
+                {{/if}}
+              {{/if}}
+              <h1 class="p-sub-title">
+                Playbook Run History {{#if incident.pbHistory}}({{incident.pbHistory.length}}){{/if}}
+              </h1>
+              {{#if incidentResult.__playbookRunHistoryLoading}}
+                <div class="p-footnote">
+                  {{fa-icon icon="spinner-third" spin=true}} Loading playbook history ...
+                </div>
+              {{else}}
+                <div class="wrap-incident">
+                  {{#if incident.pbHistory.length}}
+                    {{#each incident.pbHistory as |playbookRun|}}
+                      <div class="playbook-container">
+                        <span class="p-sub-sub-title">{{playbookRun.name}}</span>
+                        {{#if playbookRun.status}}
+                          <div class="playbook-run-date">
+                            <span class="p-key">Type:</span>
+                            <span class="p-value">Current Work Plan</span>
+                          </div>
+                          <div>
+                            <span class="p-key">Status:</span>
+                            <span class="p-value">{{capitalize playbookRun.status}}</span>
+                          </div>
+                          <div>
+                            <span class="p-key">Run Date:</span>
+                            <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+                          </div>
+                          <div class="work-plan-link">
+                            <a class="p-link" href="{{baseUrl}}/WorkPlan/{{incident.id}}"> Work Plan
+                              {{fa-icon "external-link-square" class="external-link-icon"}}</a>
+                          </div>
+                        {{else}}
+                          <div class="playbook-run-date">
+                            <span class="p-key">Run Date:</span>
+                            <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+                          </div>
+                        {{/if}}
+                      </div>
+                    {{/each}}
                   {{else}}
-                    <div class="playbook-run-date">
-                      <span class="p-key">Run Date:</span>
-                      <span class="p-value">{{moment-format playbookRun.startDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-                    </div>
+                    <span class="p-value">None</span>
                   {{/if}}
                 </div>
-              {{/each}}
-            {{else}}
-              <span class="p-value">None</span>
+              {{/if}}
             {{/if}}
+            {{!-- End of Incidents - Playbook History Tab --}}
           </div>
-        {{/if}}
+        {{/let}}
+        {{!-- End of Incidents --}}
       {{/each}}
+      {{!-- Incident Paging component --}}
+      {{#if (gt pagingData.length pageSize)}}
+        <div class="paging-bar">
+          <button class="btn paging-btn" {{action "firstPage"}} disabled={{isPrevButtonsDisabled}}>
+            {{fa-icon icon="angle-double-left" fixedWidth=false}}
+          </button>
+          <button class="btn paging-btn" {{action "prevPage"}} disabled={{isPrevButtonsDisabled}}>
+            {{fa-icon icon="angle-left" fixedWidth=false}}
+          </button>
+          <div class="paging-info">
+            {{#if (eq pageSize 1)}}
+              {{pagingStartItem}} of {{pagingData.length}}
+            {{else}}
+              {{pagingStartItem}} - {{pagingEndItem}} of {{pagingData.length}}  
+            {{/if}}            
+          </div>
+          <button class="btn paging-btn" {{action "nextPage"}} disabled={{isNextButtonDisabled}}>
+            {{fa-icon icon="angle-right" fixedWidth=false}}
+          </button>
+          <button class="btn paging-btn" {{action "lastPage"}} disabled={{isNextButtonDisabled}}>
+            {{fa-icon icon="angle-double-right" fixedWidth=false}}
+          </button>
+        </div>
+      {{/if}}
     {{/if}}
   </div>
 {{/if}}
 
 {{#if (eq state.activeTab "evidence")}}
   <div class="mt-2">
-    {{#each evidence as | result |}}
-      <h1 class="p-title">
-        {{fa-icon icon="puzzle-piece" fixedWidth=true}} Evidence
-        <a class="p-link ml-1" href="{{baseUrl}}/artifactViewer/{{result.incidentId}}/{{result.entryId}}">
-          {{result.id}}
-        </a>
-        <span class="ml-1">for Incident</span>
-        <a class="p-link ml-1" href="{{baseUrl}}/EvidenceBoard/{{result.incidentId}}">
-          #{{result.incidentId}}
-        </a>
-      </h1>
-      <div class="mt-2 evidence-description">{{result.description}}</div>
-      <div class="mt-1">
-        <span class="p-key">Occurred:</span>
-        <span class="p-value">{{moment-format result.occurred "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-      </div>
-      <div>
-        <span class="p-key">Fetched:</span>
-        <span class="p-value">{{moment-format result.fetched "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-      </div>
-      <div>
-        <span class="p-key">Marked Date:</span>
-        <span class="p-value">{{moment-format result.markedDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
-      </div>
-      <div>
-        <span class="p-key">Submitter:</span>
-        <span class="p-value">{{result.markedBy}}</span>
-      </div>
-      {{#if (gt result.tags.length 0)}}
+    {{#each evidence as | evidenceResult |}}
+      {{#let evidenceResult.evidence as | result |}}
+        <h1 class="p-title">
+          {{fa-icon icon="puzzle-piece" fixedWidth=true}} Evidence
+          <a class="p-link ml-1" href="{{baseUrl}}/artifactViewer/{{result.incidentId}}/{{result.entryId}}">
+            {{result.id}}
+          </a>
+          <span class="ml-1">for Incident</span>
+          <a class="p-link ml-1" href="{{baseUrl}}/EvidenceBoard/{{result.incidentId}}">
+            #{{result.incidentId}}
+          </a>
+        </h1>
+        <div class="mt-2 evidence-description">{{result.description}}</div>
         <div class="mt-1">
-          {{#each result.tags as | tag |}}
-            <span class="p-tag">{{tag}}</span>
-          {{/each}}
+          <span class="p-key">Occurred:</span>
+          <span class="p-value">{{moment-format result.occurred "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
         </div>
-      {{/if}}
+        <div>
+          <span class="p-key">Fetched:</span>
+          <span class="p-value">{{moment-format result.fetched "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+        </div>
+        <div>
+          <span class="p-key">Marked Date:</span>
+          <span class="p-value">{{moment-format result.markedDate "YYYY-MM-DD HH:mm:ss z" timeZone=timezone}}</span>
+        </div>
+        <div>
+          <span class="p-key">Submitter:</span>
+          <span class="p-value">{{result.markedBy}}</span>
+        </div>
+        {{#if (gt result.tags.length 0)}}
+          <div class="mt-1">
+            {{#each result.tags as | tag |}}
+              <span class="p-tag">{{tag}}</span>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{/let}}
     {{/each}}
   </div>
 {{/if}}
@@ -777,9 +842,9 @@
         >
           <option disabled selected value=""> -- Select an Incident --</option>
           <option value="custom_id"> -- Provide your own Incident ID --</option>
-          {{#each details.incidents as | incident |}}
-            <option value="{{incident.id}}" selected={{if (eq incident.id state.xsoarIncidentId) true}}>
-              #{{incident.id}} {{incident.name}}
+          {{#each details.incidents as | incidentResult |}}
+            <option value="{{incidentResult.incident.id}}" selected={{if (eq incidentResult.incident.id state.xsoarIncidentId) true}}>
+              #{{incidentResult.incident.id}} {{incidentResult.incident.name}}
             </option>
           {{/each}}
         </select>

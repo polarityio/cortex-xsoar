@@ -1,17 +1,16 @@
 const _ = require('lodash');
 const moment = require('moment');
 
-const { _P } = require('./dataTransformations');
-
-const getPlaybookRunHistoryForIncidents = (
-  incidents,
+const getPlaybookRunHistoryForIncident = async (
+  { incidentId },
   options,
   requestWithDefaults,
+  callback,
   Logger
-) =>
-  _P.map(incidents, async (incident) => {
+) => {
+  try {
     const playbookRunHistory = await getPlaybookRunHistory(
-      incident,
+      incidentId,
       options,
       Logger,
       requestWithDefaults
@@ -19,23 +18,49 @@ const getPlaybookRunHistoryForIncidents = (
 
     const pbHistoryWithFormattedDates = formatPlaybookRunHistory(playbookRunHistory);
 
-    return {
-      ...incident,
-      pbHistory: pbHistoryWithFormattedDates
-    };
-  });
+    Logger.trace(
+      { pbHistoryWithFormattedDates, incidentId },
+      'getPlaybookRunHistoryForIncident'
+    );
 
-const getPlaybookRunHistory = async (incident, options, Logger, requestWithDefaults) => {
+    callback(null, {
+      pbHistory: pbHistoryWithFormattedDates
+    });
+  } catch (error) {
+    Logger.error(
+      error,
+      { detail: `Failed to Get Playbook Run History for Incident ${incidentId}` },
+      'Get Playbooks Failed'
+    );
+    return callback({
+      errors: [
+        {
+          err: error,
+          detail:
+            'Cortex XSOAR Failed to get Playbook Run History for Incident - ' +
+            error.message
+        }
+      ]
+    });
+  }
+};
+
+const getPlaybookRunHistory = async (
+  incidentId,
+  options,
+  Logger,
+  requestWithDefaults
+) => {
   const { body: playbookRunHistory } = await requestWithDefaults({
-    url: `${options.url}/inv-playbook/${incident.id}`,
+    url: `${options.apiUrl}/${
+      options.apiKeyId.length > 0 ? 'xsoar/' : ''
+    }inv-playbook/${incidentId}`,
     method: 'GET',
     headers: {
       authorization: options.apiKey,
+      'x-xdr-auth-id': options.apiKeyId,
       'Content-type': 'application/json'
     }
-  }).catch((error) => {
-    Logger.error({ error }, 'Incident Query Error');
-    throw error;
   });
 
   return playbookRunHistory;
@@ -58,4 +83,4 @@ const formatPlaybookRunHistory = ({
     .orderBy([({ startDate }) => moment(startDate).unix()], ['desc'])
     .value();
 
-module.exports = { getPlaybookRunHistoryForIncidents, formatPlaybookRunHistory };
+module.exports = { getPlaybookRunHistoryForIncident, formatPlaybookRunHistory };
