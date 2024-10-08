@@ -25,6 +25,7 @@ const startup = (logger) => {
 
 const doLookup = async (entities, options, cb) => {
   Logger.debug({ entities }, 'Entities');
+  entities = entities.filter(entity => entity.type !== 'custom');
   options.url = options.url.endsWith('/') ? options.url.slice(0, -1) : options.url;
 
   // This is a v6 server so the apiUrl is just the normal app url

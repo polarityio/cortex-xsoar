@@ -2,11 +2,11 @@ const fp = require('lodash/fp');
 const moment = require('moment');
 
 const {
-  RELEVANT_INDICATOR_SEARCH_RESULT_KEYS,
+  RELEVANT_INCIDENT_SEARCH_RESULT_KEYS,
   HUMAN_READABLE_SEVERITY_LEVELS
 } = require('./constants');
 
-const { getKeys } = require('./dataTransformations');
+const _ = require('lodash');
 
 const formatDemistoResults = (
   entities,
@@ -112,6 +112,19 @@ const evidenceDescriptionMatches = (evidence, entity) => {
   );
 };
 
+const getKeys = (keysToPick, items, itemKey = '') =>
+  items.map((item) => {
+    const pickedKeys = _.pickBy(itemKey ? item[itemKey] : item, (v, key) =>
+      keysToPick.includes(key)
+    );
+    if (itemKey) {
+      item[itemKey] = pickedKeys;
+    } else {
+      item = pickedKeys;
+    }
+    return item;
+  });
+
 const _formatFoundIncidentResults = (
   entity,
   incidentsForThisEntity,
@@ -131,7 +144,11 @@ const _formatFoundIncidentResults = (
     ),
     details: {
       playbooks: [], // playbooks are populated via onMessage
-      incidents: incidentsForThisEntity,
+      incidents: getKeys(
+        RELEVANT_INCIDENT_SEARCH_RESULT_KEYS,
+        incidentsForThisEntity,
+        'incident'
+      ),
       indicators: indicatorsForThisEntity,
       baseUrl: `${options.url}${options.apiKeyId.length > 0 ? '' : '/#'}`,
       evidence: evidenceForThisEntity
@@ -203,9 +220,22 @@ const createSummary = (
 
   const types = [
     ...new Set(
-      incidentsForThisEntity.map(
-        (incidentResult) => `Type: ${incidentResult.incident.type}`
-      )
+      incidentsForThisEntity.reduce((accum, incidentResult, index, list) => {
+        let type = incidentResult.incident.type;
+
+        if (accum.length <= 3) {
+          accum.push(`Type: ${type}`);
+          return accum;
+        }
+
+        // this is the last incident
+        if (index === list.length - 1) {
+          const numAdditional = list.length - accum.length;
+          accum.push(`+${numAdditional} type${numAdditional > 1 ? 's' : ''}`);
+        }
+
+        return accum;
+      }, [])
     )
   ];
 

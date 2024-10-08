@@ -11,13 +11,7 @@ const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) 
     .flatten()
     .value();
 
-const getKeys = (keys, items) =>
-  Array.isArray(items)
-    ? items.map((item) => _.pickBy(item, (v, key) => keys.includes(key)))
-    : _.pickBy(items, (v, key) => keys.includes(key));
-
 module.exports = {
   _partitionFlatMap,
-  getKeys,
   _P
 };
