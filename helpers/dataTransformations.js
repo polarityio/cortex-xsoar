@@ -11,7 +11,20 @@ const _partitionFlatMap = (func, partitionSize, collection, parallelLimit = 10) 
     .flatten()
     .value();
 
+const isNullOrEmptyObject = (obj) => {
+  if (obj === null) {
+    return true;
+  }
+
+  if (typeof obj === 'object') {
+    return Object.keys(obj).length === 0;
+  }
+
+  return false;
+};
+
 module.exports = {
+  isNullOrEmptyObject,
   _partitionFlatMap,
   _P
 };

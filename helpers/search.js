@@ -1,5 +1,5 @@
 const { getLogger } = require('./logger');
-
+const { isNullOrEmptyObject } = require('./dataTransformations');
 const polarityTypeToCortexType = (entity) => {
   if (entity.types.includes('IPv4') || entity.types.includes('IPv6')) {
     return 'IP';
@@ -67,8 +67,12 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
               // Add a "synthetic" index to support front-end paging
               result.incidentResult.incident.__index = accum.incidents.length;
               accum.incidents.push({
-                highlights: result.incidentResult.highlights,
-                highlightsAsString: JSON.stringify(result.incidentResult.highlights).toLowerCase(),
+                highlights: isNullOrEmptyObject(result.incidentResult.highlights)
+                  ? null
+                  : result.incidentResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.incidentResult.highlights
+                ).toLowerCase(),
                 incident: result.incidentResult.incident
               });
             }
@@ -78,8 +82,12 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
               // Add a "synthetic" index to support front-end paging
               result.evidenceResult.evidence.__index = accum.evidence.length;
               accum.evidence.push({
-                highlights: result.evidenceResult.highlights,
-                highlightsAsString: JSON.stringify(result.evidenceResult.highlights).toLowerCase(),
+                highlights: isNullOrEmptyObject(result.evidenceResult.highlights)
+                  ? null
+                  : result.evidenceResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.evidenceResult.highlights
+                ).toLowerCase(),
                 evidence: result.evidenceResult.evidence
               });
             }
@@ -89,8 +97,12 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
               // Add a "synthetic" index to support front-end paging
               result.insightResult.insight.__index = accum.indicators.length;
               accum.indicators.push({
-                highlights: result.insightResult.highlights,
-                highlightsAsString: JSON.stringify(result.insightResult.highlights).toLowerCase(),
+                highlights: isNullOrEmptyObject(result.insightResult.highlights)
+                  ? null
+                  : result.insightResult.highlights,
+                highlightsAsString: JSON.stringify(
+                  result.insightResult.highlights
+                ).toLowerCase(),
                 indicator: result.insightResult.insight
               });
             }
@@ -104,6 +116,7 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
         indicators: []
       }
     );
+    
     return formattedResults;
   } catch (error) {
     Logger.error(error, 'General Search Error');

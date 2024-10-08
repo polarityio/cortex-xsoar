@@ -174,7 +174,7 @@ const _createContainerAndRunPlaybook = async (
     return {
       pbHistory: formattedPlaybookHistory,
       newIncident: {
-        highlights: {},
+        highlights: null,
         highlightsAsString: '',
         incident: newlyCreatedIncident
       },

@@ -34,7 +34,7 @@ const createIndicator = async (
 
     callback(null, {
       newIndicator: {
-        highlights: {},
+        highlights: null,
         highlightsAsString: '',
         indicator: newlyCreatedIndicator
       },

@@ -485,7 +485,7 @@
             </ul>
     
             {{#if (or (eq incidentResult.__activeTab "incident") (not incidentResult.__activeTab))}}
-              {{#if incidentResult.highlights}}
+              {{#unless (is-empty incidentResult.highlights)}}
                 <div class="p-sub-title">
                   Search Match
                 </div>
@@ -499,7 +499,7 @@
                     </span>
                   </div>
                 {{/each-in}}
-              {{/if}}
+              {{/unless}}
               
               <div class="p-sub-title">
                 Details

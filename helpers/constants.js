@@ -9,7 +9,8 @@ const RELEVANT_INCIDENT_SEARCH_RESULT_KEYS = [
   'details',
   'owner',
   'category',
-  'pbHistory'
+  'pbHistory',
+  '__index'
 ];
 
 const IGNORED_IPS = new Set(['127.0.0.1', '255.255.255.255', '0.0.0.0']);
