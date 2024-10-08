@@ -2,7 +2,6 @@ polarity.export = PolarityComponent.extend({
   timezone: Ember.computed('Intl', function () {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }),
-  playbooksByEntityTypeLoaded: false,
   notificationsData: Ember.inject.service('notificationsData'),
   state: Ember.computed.alias('block._state'),
   details: Ember.computed.alias('block.data.details'),
@@ -94,18 +93,20 @@ polarity.export = PolarityComponent.extend({
       } else {
         this.set('state.activeTab', 'incidents');
       }
+      
+      this.set('state.playbooksByEntityTypeLoaded', false);
     }
 
     if (
       this.get('state.activeTab') === 'incidents' &&
-      this.get('playbooksByEntityTypeLoaded') === false &&
+      this.get('state.playbooksByEntityTypeLoaded') === false &&
       this.get('allowIncidentCreation') &&
       !this.get('incidents')
     ) {
       this.set('loadingPlaybooksByEntityType', true);
       this.getPlaybooksByEntityType()
         .then(() => {
-          this.set('playbooksByEntityTypeLoaded', true);
+          this.set('state.playbooksByEntityTypeLoaded', true);
         })
         .finally(() => {
           this.set('loadingPlaybooksByEntityType', false);
@@ -289,10 +290,10 @@ polarity.export = PolarityComponent.extend({
       this.set('currentPage', totalPages);
     },
     getPlaybooksByEntityType: function (incidentIndex) {
-      if (this.get('playbooksByEntityTypeLoaded') === false) {
+      if (this.get('state.playbooksByEntityTypeLoaded') === false) {
         this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, true);
         return this.getPlaybooksByEntityType(incidentIndex).then(() => {
-          this.set('playbooksByEntityTypeLoaded', true);
+          this.set('state.playbooksByEntityTypeLoaded', true);
           this.set(`incidents.${incidentIndex}.__loadingPlaybooksByEntityType`, false);
         });
       }
@@ -343,14 +344,14 @@ polarity.export = PolarityComponent.extend({
       }
       if (
         tabName === 'incidents' &&
-        this.get('playbooksByEntityTypeLoaded') === false &&
+        this.get('state.playbooksByEntityTypeLoaded') === false &&
         this.get('allowIncidentCreation') &&
         !this.get('incidents')
       ) {
         this.set('loadingPlaybooksByEntityType', true);
         return this.getPlaybooksByEntityType()
           .then(() => {
-            this.set('playbooksByEntityTypeLoaded', true);
+            this.set('state.playbooksByEntityTypeLoaded', true);
           })
           .finally(() => {
             this.set('loadingPlaybooksByEntityType', false);
