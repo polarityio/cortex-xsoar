@@ -64,8 +64,6 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
         switch (result.type) {
           case 'incident':
             if (result.incidentResult && result.incidentResult.incident) {
-              // Add a "synthetic" index to support front-end paging
-              result.incidentResult.incident.__index = accum.incidents.length;
               accum.incidents.push({
                 highlights: isNullOrEmptyObject(result.incidentResult.highlights)
                   ? null
@@ -79,8 +77,6 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
             break;
           case 'evidence':
             if (result.evidenceResult && result.evidenceResult.evidence) {
-              // Add a "synthetic" index to support front-end paging
-              result.evidenceResult.evidence.__index = accum.evidence.length;
               accum.evidence.push({
                 highlights: isNullOrEmptyObject(result.evidenceResult.highlights)
                   ? null
@@ -94,8 +90,6 @@ const search = async (entitiesPartition, options, requestWithDefaults) => {
             break;
           case 'indicator':
             if (result.insightResult && result.insightResult.insight) {
-              // Add a "synthetic" index to support front-end paging
-              result.insightResult.insight.__index = accum.indicators.length;
               accum.indicators.push({
                 highlights: isNullOrEmptyObject(result.insightResult.highlights)
                   ? null

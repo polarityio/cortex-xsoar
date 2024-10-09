@@ -19,6 +19,11 @@ const formatDemistoResults = (
   entities.map((entity) => {
     const incidentsForThisEntity = getIncidentsForThisEntity(incidentResults, entity);
 
+    // add a synthetic index value to be used for paging in the template
+    incidentsForThisEntity.forEach((result, index) => {
+        result.incident.__index = index;
+    });
+
     const evidenceForThisEntity = getEvidenceForThisEntity(evidenceResults, entity);
 
     const indicatorsForThisEntity = getIndicatorsForThisEntity(
