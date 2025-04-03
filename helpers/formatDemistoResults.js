@@ -21,7 +21,7 @@ const formatDemistoResults = (
 
     // add a synthetic index value to be used for paging in the template
     incidentsForThisEntity.forEach((result, index) => {
-        result.incident.__index = index;
+      result.incident.__index = index;
     });
 
     const evidenceForThisEntity = getEvidenceForThisEntity(evidenceResults, entity);
@@ -69,7 +69,16 @@ const getIncidentsForThisEntity = (incidentResults, entity) => {
     (result) =>
       incidentNameMatches(result.incident, entity) ||
       incidentLabelMatches(result.incident, entity) ||
+      incidentDetailsMatches(result.incident, entity) ||
       result.highlightsAsString.includes(entity.value.toLowerCase())
+  );
+};
+
+const incidentDetailsMatches = (incident, entity) => {
+  return (
+    incident.details &&
+    typeof incident.details === 'string' &&
+    incident.details.toLowerCase().includes(entity.value.toLowerCase())
   );
 };
 
