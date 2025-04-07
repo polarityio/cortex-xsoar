@@ -65,36 +65,13 @@ const formatDemistoResults = (
   });
 
 const getIncidentsForThisEntity = (incidentResults, entity) => {
-  return incidentResults.filter(
-    (result) =>
-      incidentNameMatches(result.incident, entity) ||
-      incidentLabelMatches(result.incident, entity) ||
-      incidentDetailsMatches(result.incident, entity) ||
-      result.highlightsAsString.includes(entity.value.toLowerCase())
+  return incidentResults.filter((result) =>
+    incidentContentMatches(result.incident, entity)
   );
 };
 
-const incidentDetailsMatches = (incident, entity) => {
-  return (
-    incident.details &&
-    typeof incident.details === 'string' &&
-    incident.details.toLowerCase().includes(entity.value.toLowerCase())
-  );
-};
-
-const incidentNameMatches = (incident, entity) => {
-  return (
-    incident.name && incident.name.toLowerCase().includes(entity.value.toLowerCase())
-  );
-};
-
-const incidentLabelMatches = (incident, entity) => {
-  return incident.labels.some(
-    (label) =>
-      label &&
-      label.value &&
-      label.value.toLowerCase().includes(entity.value.toLowerCase())
-  );
+const incidentContentMatches = (incident, entity) => {
+  return JSON.stringify(incident).toLowerCase().includes(entity.value.toLowerCase());
 };
 
 const getIndicatorsForThisEntity = (indicatorResults, entity) => {
